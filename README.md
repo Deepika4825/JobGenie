@@ -25,6 +25,9 @@ Get ATS scores, relevant job matches, and personalized improvement suggestions.
 * Fetches real-time job data using APIs
 * Provides direct apply links for job roles
 * Clean and responsive UI built with React
+* Used uptime monitoring to keep the backend active and responsive.
+* Ensured consistent API availability during usage and testing.
+
 
 
 ## Tech Stack
