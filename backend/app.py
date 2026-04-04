@@ -1,4 +1,4 @@
-from dotenv import load_dotenv
+﻿from dotenv import load_dotenv
 load_dotenv()
 import json, re, traceback
 import requests
@@ -17,7 +17,7 @@ JSEARCH_URL   = "https://jsearch.p.rapidapi.com/search"
 print("Backend ready")
 
 
-# ── PDF extraction ────────────────────────────────────────────────────────────
+# â”€â”€ PDF extraction â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 def extract_pdf(file):
     reader = PyPDF2.PdfReader(file)
     text = ""
@@ -28,7 +28,7 @@ def extract_pdf(file):
     return re.sub(r"\s+", " ", text).strip()
 
 
-# ── Groq analysis ─────────────────────────────────────────────────────────────
+# â”€â”€ Groq analysis â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 def ask_groq(text):
     prompt = (
         "Analyze this resume. Return ONLY raw JSON, no markdown.\n\n"
@@ -58,7 +58,7 @@ def ask_groq(text):
     return data
 
 
-# ── JSearch real jobs ─────────────────────────────────────────────────────────
+# â”€â”€ JSearch real jobs â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 def days_ago(posted_str):
     if not posted_str:
         return "Today"
@@ -129,7 +129,7 @@ def fetch_jobs(job_titles):
     return all_jobs if all_jobs else fallback_jobs(job_titles)
 
 
-# ── Fallback when JSearch fails ───────────────────────────────────────────────
+# â”€â”€ Fallback when JSearch fails â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 def fallback_jobs(job_titles):
     portals = [
         ("LinkedIn",    "https://www.linkedin.com/jobs/search/?keywords={}"),
@@ -164,7 +164,7 @@ def fallback_jobs(job_titles):
     return jobs
 
 
-# ── Routes ────────────────────────────────────────────────────────────────────
+# â”€â”€ Routes â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 @app.route("/", methods=["GET"])
 def health():
     return jsonify({"status": "running"})
