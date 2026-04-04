@@ -40,6 +40,12 @@ def close_db(e=None):
 def hash_pw(pw):
     return hashlib.sha256(pw.encode()).hexdigest()
 
+
+@app.route("/admin/users", methods=["GET"])
+def admin_users():
+    db = get_db()
+    users = db.execute("SELECT id, name, username, email, created_at FROM users ORDER BY created_at DESC").fetchall()
+    return jsonify([dict(u) for u in users]), 200
 @app.route("/", methods=["GET"])
 def health():
     return jsonify({"status": "running", "db": "SQLite"})
