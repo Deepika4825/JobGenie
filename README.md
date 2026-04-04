@@ -6,8 +6,7 @@ Get ATS scores, relevant job matches, and personalized improvement suggestions.
 
 ## Live Demo
 
-[View the Application](https://job-genie-tan.vercel.app
- )
+ https://job-genie-tan.vercel.app
 
 
 ## Features
