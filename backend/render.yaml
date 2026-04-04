@@ -1,0 +1,9 @@
+services:
+  - type: web
+    name: jobgenie-backend
+    runtime: python
+    buildCommand: pip install -r requirements.txt && python db_setup.py
+    startCommand: python app.py
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.11.0

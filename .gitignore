@@ -1,0 +1,16 @@
+# Node
+jobgenie/node_modules/
+jobgenie/dist/
+jobgenie/.env
+
+# Python
+backend/venv/
+backend/.venv/
+backend/__pycache__/
+backend/*.pyc
+backend/jobgenie.db
+
+# General
+.env
+*.log
+.DS_Store

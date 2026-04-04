@@ -1,0 +1,6 @@
+.env
+jobgenie.db
+__pycache__/
+*.pyc
+venv/
+.venv/
