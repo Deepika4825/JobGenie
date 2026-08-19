@@ -123,6 +123,8 @@ def ask_groq(text):
     if resp.status_code != 200:
         raise Exception(f"Groq {resp.status_code}: {resp.text[:200]}")
     raw = resp.json()["choices"][0]["message"]["content"].strip()
+    # Strip <think>...</think> reasoning blocks (Qwen thinking models)
+    raw = re.sub(r"<think>.*?</think>", "", raw, flags=re.DOTALL).strip()
     raw = re.sub(r"^```(?:json)?\s*", "", raw).strip()
     raw = re.sub(r"\s*```$", "", raw).strip()
     data = json.loads(raw)
