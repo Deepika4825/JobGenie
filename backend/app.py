@@ -118,7 +118,7 @@ def extract_pdf(file):
 def ask_groq(text):
     prompt = "Analyze this resume. Return ONLY raw JSON, no markdown.\nFormat:\n{\"skills\":[],\"job_titles\":[],\"skill_gaps\":[],\"resume_score\":75,\"suggestions\":[]}\nRules: resume_score 0-100, ONLY JSON.\nResume:\n" + text[:4000]
     headers = {"Authorization": f"Bearer {GROQ_API_KEY}", "Content-Type": "application/json"}
-    payload = {"model": "llama-3.3-70b-versatile", "messages": [{"role": "user", "content": prompt}], "temperature": 0.3, "max_tokens": 1024}
+    payload = {"model": "llama3-70b-8192", "messages": [{"role": "user", "content": prompt}], "temperature": 0.3, "max_tokens": 1024}
     resp = requests.post(GROQ_URL, json=payload, headers=headers, timeout=30)
     if resp.status_code != 200:
         raise Exception(f"Groq {resp.status_code}: {resp.text[:200]}")
