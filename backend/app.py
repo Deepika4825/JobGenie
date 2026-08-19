@@ -118,15 +118,18 @@ def extract_pdf(file):
 def ask_groq(text):
     prompt = "Analyze this resume. Return ONLY raw JSON, no markdown.\nFormat:\n{\"skills\":[],\"job_titles\":[],\"skill_gaps\":[],\"resume_score\":75,\"suggestions\":[]}\nRules: resume_score 0-100, ONLY JSON.\nResume:\n" + text[:4000]
     headers = {"Authorization": f"Bearer {GROQ_API_KEY}", "Content-Type": "application/json"}
-    payload = {"model": "qwen/qwen3.6-27b", "messages": [{"role": "user", "content": prompt}], "temperature": 0.3, "max_tokens": 1024}
+    payload = {"model": "openai/gpt-oss-120b", "messages": [{"role": "user", "content": prompt}], "temperature": 0.3, "max_tokens": 1024}
     resp = requests.post(GROQ_URL, json=payload, headers=headers, timeout=30)
     if resp.status_code != 200:
         raise Exception(f"Groq {resp.status_code}: {resp.text[:200]}")
     raw = resp.json()["choices"][0]["message"]["content"].strip()
-    # Strip <think>...</think> reasoning blocks (Qwen thinking models)
+    print(f"Groq raw response: {raw[:200]}")
+    # Strip <think>...</think> reasoning blocks
     raw = re.sub(r"<think>.*?</think>", "", raw, flags=re.DOTALL).strip()
     raw = re.sub(r"^```(?:json)?\s*", "", raw).strip()
     raw = re.sub(r"\s*```$", "", raw).strip()
+    if not raw:
+        raise Exception("Groq returned empty response after stripping")
     data = json.loads(raw)
     data["resume_score"] = int(data.get("resume_score", 70))
     return data
