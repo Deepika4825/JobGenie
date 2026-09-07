@@ -218,12 +218,12 @@ export default function ResumeGenerator() {
             <Grid2>
               <Field label="Degree / Course" required value={edu.degree}    onChange={e=>updateList('education',i,'degree',   e.target.value)} placeholder="B.Tech Artificial Intelligence" />
               <Field label="College / University"      value={edu.college}   onChange={e=>updateList('education',i,'college',  e.target.value)} placeholder="KPR Institute of Engineering" />
-              <Field label="Location"                  value={edu.location}  onChange={e=>updateList('education',i,'location', e.target.value)} placeholder="Coimbatore" />
-              <Field label="CGPA / Percentage"         value={edu.cgpa}      onChange={e=>updateList('education',i,'cgpa',     e.target.value)} placeholder="9.22 / 92%" />
+              <Field label="Location"                  value={edu.location}  onChange={e=>updateList('education',i,'location', e.target.value)} placeholder="e.g. Coimbatore" />
+              <Field label="CGPA / Percentage"         value={edu.cgpa}      onChange={e=>updateList('education',i,'cgpa',     e.target.value)} placeholder="e.g. 8.5 / 85%" />
             </Grid2>
             <Grid2 style={{ marginTop:'1rem' }}>
-              <Field label="Start Year" value={edu.startYear} onChange={e=>updateList('education',i,'startYear',e.target.value)} placeholder="2023" />
-              <Field label="End Year"   value={edu.endYear}   onChange={e=>updateList('education',i,'endYear',  e.target.value)} placeholder="2027" />
+              <Field label="Start Year" value={edu.startYear} onChange={e=>updateList('education',i,'startYear',e.target.value)} placeholder="e.g. 2021" />
+              <Field label="End Year"   value={edu.endYear}   onChange={e=>updateList('education',i,'endYear',  e.target.value)} placeholder="e.g. 2025" />
             </Grid2>
           </EntryCard>
         ))}

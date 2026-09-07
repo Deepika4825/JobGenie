@@ -88,9 +88,7 @@ select:-webkit-autofill:focus {
   background-color: #FFF9F9 !important;
   border-color: var(--rose-primary) !important;
   caret-color: var(--rose-accent);
-}
-
-/* Override blue focus ring on all elements */
+}/* Override blue focus ring on all elements */
 *:focus { outline: none; }
 *:focus-visible {
   outline: 2px solid rgba(142,69,133,0.4);
@@ -123,8 +121,8 @@ select:-webkit-autofill:focus {
 }
 
 .rose-input::placeholder {
-  color: var(--rose-secondary);
-  opacity: 0.6;
+  color: #C4A0A0;
+  opacity: 1;
 }
 
 .rose-input:hover { border-color: var(--rose-secondary); }
