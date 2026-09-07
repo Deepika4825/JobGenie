@@ -1,9 +1,10 @@
 ﻿import json, re, traceback, sqlite3, hashlib, os
 import requests
 from datetime import datetime, timezone
-from flask import Flask, request, jsonify, g
+from flask import Flask, request, jsonify, g, send_file
 from flask_cors import CORS
 import PyPDF2
+import io
 
 app = Flask(__name__)
 CORS(app, origins=["http://localhost:5173", "https://job-genie-tan.vercel.app"])
@@ -252,6 +253,40 @@ def upload():
     except Exception:
         print(traceback.format_exc())
         return jsonify({"error": "Analysis failed."}), 500
+
+@app.route("/generate-resume", methods=["POST"])
+def generate_resume_route():
+    """
+    Fresher Resume Generator endpoint.
+    Accepts JSON resume data, returns a PDF file.
+    """
+    try:
+        from resume_generator import generate_resume
+        data = request.get_json()
+        if not data:
+            return jsonify({"error": "No data provided"}), 400
+
+        # Basic validation
+        personal = data.get("personal", {})
+        if not personal.get("fullName", "").strip():
+            return jsonify({"error": "Full name is required"}), 400
+        if not personal.get("email", "").strip():
+            return jsonify({"error": "Email is required"}), 400
+
+        pdf_bytes = generate_resume(data)
+        name_slug = re.sub(r'\W+', '_', personal.get("fullName", "resume").strip().lower())
+        filename  = f"{name_slug}_resume.pdf"
+
+        return send_file(
+            io.BytesIO(pdf_bytes),
+            mimetype='application/pdf',
+            as_attachment=False,
+            download_name=filename
+        )
+    except Exception:
+        print(traceback.format_exc())
+        return jsonify({"error": "Failed to generate resume"}), 500
+
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 8000)), debug=False)

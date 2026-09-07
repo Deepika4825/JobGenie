@@ -5,9 +5,10 @@ import Avatar from './Avatar';
 import Logo from './Logo';
 
 const TITLES = {
-  '/analyze': 'Resume Analysis',
-  '/jobs':    'Job Recommendations',
-  '/profile': 'My Profile',
+  '/analyze':          'Resume Analysis',
+  '/jobs':             'Job Recommendations',
+  '/resume-generator': 'Resume Generator',
+  '/profile':          'My Profile',
 };
 
 export default function Navbar({ onToggle }) {

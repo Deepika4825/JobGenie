@@ -4,8 +4,9 @@ import Avatar from './Avatar';
 import Logo from './Logo';
 
 const NAV = [
-  { to: '/analyze', icon: '📊', label: 'Resume Analysis' },
-  { to: '/jobs',    icon: '💼', label: 'Job Recommendations' },
+  { to: '/analyze',          icon: '📊', label: 'Resume Analysis' },
+  { to: '/jobs',             icon: '💼', label: 'Job Recommendations' },
+  { to: '/resume-generator', icon: '📄', label: 'Resume Generator' },
 ];
 
 export default function Sidebar({ open, onClose }) {
