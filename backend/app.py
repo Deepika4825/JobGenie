@@ -116,18 +116,22 @@ def extract_pdf(file):
     return re.sub(r"\s+", " ", text).strip()
 
 def ask_groq(text):
-    prompt = "Analyze this resume. Return ONLY raw JSON, no markdown.\nFormat:\n{\"skills\":[],\"job_titles\":[],\"skill_gaps\":[],\"resume_score\":75,\"suggestions\":[]}\nRules: resume_score 0-100, ONLY JSON.\nResume:\n" + text[:4000]
+    prompt = "Analyze this resume. Return ONLY raw JSON, no markdown, no extra text.\nFormat:\n{\"skills\":[],\"job_titles\":[],\"skill_gaps\":[],\"resume_score\":75,\"suggestions\":[]}\nRules:\n- resume_score 0-100 integer\n- skills: max 10 most important skills only\n- job_titles: max 3 job titles\n- skill_gaps: max 5 missing skills\n- suggestions: max 4 short tips\n- ONLY return the JSON object, nothing else\nResume:\n" + text[:3000]
     headers = {"Authorization": f"Bearer {GROQ_API_KEY}", "Content-Type": "application/json"}
-    payload = {"model": "openai/gpt-oss-120b", "messages": [{"role": "user", "content": prompt}], "temperature": 0.3, "max_tokens": 2048}
+    payload = {"model": "openai/gpt-oss-120b", "messages": [{"role": "user", "content": prompt}], "temperature": 0.1, "max_tokens": 800}
     resp = requests.post(GROQ_URL, json=payload, headers=headers, timeout=30)
     if resp.status_code != 200:
         raise Exception(f"Groq {resp.status_code}: {resp.text[:200]}")
     raw = resp.json()["choices"][0]["message"]["content"].strip()
-    print(f"Groq raw response: {raw[:200]}")
+    print(f"Groq raw response: {raw[:300]}")
     # Strip <think>...</think> reasoning blocks
     raw = re.sub(r"<think>.*?</think>", "", raw, flags=re.DOTALL).strip()
     raw = re.sub(r"^```(?:json)?\s*", "", raw).strip()
     raw = re.sub(r"\s*```$", "", raw).strip()
+    # Extract JSON object if extra text present
+    match = re.search(r'\{.*\}', raw, re.DOTALL)
+    if match:
+        raw = match.group(0)
     if not raw:
         raise Exception("Groq returned empty response after stripping")
     data = json.loads(raw)
@@ -148,9 +152,9 @@ def fetch_jobs(job_titles, location="India", experience=""):
     all_jobs = []
     headers = {"X-RapidAPI-Key": JSEARCH_KEY, "X-RapidAPI-Host": "jsearch.p.rapidapi.com"}
     loc_q = location if "india" in location.lower() else f"{location}, India"
-    for title in job_titles[:4]:
+    for title in job_titles[:3]:
         try:
-            resp = requests.get(JSEARCH_URL, headers=headers, params={"query": f"{title} {loc_q}", "num_pages": "1", "page": "1", "date_posted": "month", "country": "in"}, timeout=10)
+            resp = requests.get(JSEARCH_URL, headers=headers, params={"query": f"{title} {loc_q}", "num_pages": "1", "page": "1", "date_posted": "month", "country": "in"}, timeout=20)
             if resp.status_code != 200: continue
             for j in resp.json().get("data", []):
                 ps = j.get("job_posted_at_datetime_utc") or ""
@@ -160,12 +164,31 @@ def fetch_jobs(job_titles, location="India", experience=""):
         except Exception as e:
             print(f"JSearch error: {e}")
     if not all_jobs:
-        portals = [("LinkedIn","https://www.linkedin.com/jobs/search/?keywords={}"),("Indeed","https://in.indeed.com/jobs?q={}"),("Naukri","https://www.naukri.com/{}-jobs"),("Glassdoor","https://www.glassdoor.co.in/Job/{}-jobs-SRCH_KO0,20.htm"),("Internshala","https://internshala.com/jobs/{}")]
-        locs = ["Bangalore, Karnataka, India","Mumbai, Maharashtra, India","Hyderabad, Telangana, India","Chennai, Tamil Nadu, India","Pune, Maharashtra, India"]
-        for i, title in enumerate(job_titles):
-            slug = title.lower().replace(" ","-")
-            src, link = portals[i % len(portals)]
-            all_jobs.append({"role": title, "company": "Multiple Companies", "location": locs[i % len(locs)], "work_type": ["Remote","On-site","Hybrid"][i%3], "employment_type": "Full-time", "description": f"Explore {title} opportunities.", "apply_link": link.format(slug), "source": src, "posted": "Today"})
+        # Meaningful fallback with real job portal links
+        portals = [
+            ("LinkedIn", "https://www.linkedin.com/jobs/search/?keywords={}&location=India"),
+            ("Naukri",   "https://www.naukri.com/{}-jobs-in-india"),
+            ("Indeed",   "https://in.indeed.com/jobs?q={}&l=India"),
+            ("Glassdoor","https://www.glassdoor.co.in/Job/{}-jobs-SRCH_KO0,20.htm"),
+            ("Internshala","https://internshala.com/jobs/{}"),
+        ]
+        city = location.split(",")[0].strip() if "," in location else location
+        for i, title in enumerate(job_titles[:5]):
+            slug = title.lower().replace(" ", "-")
+            keyword = title.lower().replace(" ", "+")
+            src, link_tpl = portals[i % len(portals)]
+            link = link_tpl.format(keyword if "linkedin" in link_tpl or "indeed" in link_tpl else slug)
+            all_jobs.append({
+                "role": title,
+                "company": f"Multiple Companies in {city}",
+                "location": f"{city}, India",
+                "work_type": ["Remote", "On-site", "Hybrid"][i % 3],
+                "employment_type": "Full-time",
+                "description": f"Search for {title} openings on {src}. Click Apply Now to explore current listings.",
+                "apply_link": link,
+                "source": src,
+                "posted": "Today"
+            })
     return all_jobs
 
 @app.route("/upload", methods=["POST"])
