@@ -116,9 +116,9 @@ def extract_pdf(file):
     return re.sub(r"\s+", " ", text).strip()
 
 def ask_groq(text):
-    prompt = "Analyze this resume. Return ONLY raw JSON, no markdown, no extra text.\nFormat:\n{\"skills\":[],\"job_titles\":[],\"skill_gaps\":[],\"resume_score\":75,\"suggestions\":[]}\nRules:\n- resume_score 0-100 integer\n- skills: max 10 most important skills only\n- job_titles: max 3 job titles\n- skill_gaps: max 5 missing skills\n- suggestions: max 4 short tips\n- ONLY return the JSON object, nothing else\nResume:\n" + text[:3000]
+    prompt = "Analyze this resume. Return ONLY raw JSON, no markdown, no extra text.\nFormat:\n{\"skills\":[],\"job_titles\":[],\"skill_gaps\":[],\"resume_score\":75,\"suggestions\":[]}\nRules:\n- resume_score 0-100 integer\n- skills: max 8 items\n- job_titles: max 3 items\n- skill_gaps: max 5 items\n- suggestions: max 3 short items\n- ONLY return the JSON object, nothing else\nResume:\n" + text[:2000]
     headers = {"Authorization": f"Bearer {GROQ_API_KEY}", "Content-Type": "application/json"}
-    payload = {"model": "openai/gpt-oss-120b", "messages": [{"role": "user", "content": prompt}], "temperature": 0.1, "max_tokens": 800}
+    payload = {"model": "openai/gpt-oss-120b", "messages": [{"role": "user", "content": prompt}], "temperature": 0.1, "max_tokens": 600}
     resp = requests.post(GROQ_URL, json=payload, headers=headers, timeout=30)
     if resp.status_code != 200:
         raise Exception(f"Groq {resp.status_code}: {resp.text[:200]}")
@@ -128,18 +128,43 @@ def ask_groq(text):
     raw = re.sub(r"<think>.*?</think>", "", raw, flags=re.DOTALL).strip()
     raw = re.sub(r"^```(?:json)?\s*", "", raw).strip()
     raw = re.sub(r"\s*```$", "", raw).strip()
-    # Extract JSON object if extra text present
-    match = re.search(r'\{.*\}', raw, re.DOTALL)
-    if match:
-        raw = match.group(0)
-    # If JSON is truncated, try to fix it
-    if raw and not raw.endswith('}'):
-        last_brace = raw.rfind('}')
-        if last_brace != -1:
-            raw = raw[:last_brace+1]
-    if not raw:
-        raise Exception("Groq returned empty response after stripping")
-    data = json.loads(raw)
+    # Try to parse as-is first
+    try:
+        data = json.loads(raw)
+    except json.JSONDecodeError:
+        # JSON is truncated — extract each field individually with regex
+        data = {}
+        # resume_score
+        m = re.search(r'"resume_score"\s*:\s*(\d+)', raw)
+        data["resume_score"] = int(m.group(1)) if m else 70
+        # skills array
+        m = re.search(r'"skills"\s*:\s*\[(.*?)(?:\]|$)', raw, re.DOTALL)
+        if m:
+            items = re.findall(r'"([^"]+)"', m.group(1))
+            data["skills"] = items
+        else:
+            data["skills"] = []
+        # job_titles
+        m = re.search(r'"job_titles"\s*:\s*\[(.*?)(?:\]|$)', raw, re.DOTALL)
+        if m:
+            items = re.findall(r'"([^"]+)"', m.group(1))
+            data["job_titles"] = items
+        else:
+            data["job_titles"] = ["Software Engineer"]
+        # skill_gaps
+        m = re.search(r'"skill_gaps"\s*:\s*\[(.*?)(?:\]|$)', raw, re.DOTALL)
+        if m:
+            items = re.findall(r'"([^"]+)"', m.group(1))
+            data["skill_gaps"] = items
+        else:
+            data["skill_gaps"] = []
+        # suggestions
+        m = re.search(r'"suggestions"\s*:\s*\[(.*?)(?:\]|$)', raw, re.DOTALL)
+        if m:
+            items = re.findall(r'"([^"]+)"', m.group(1))
+            data["suggestions"] = items
+        else:
+            data["suggestions"] = []
     data["resume_score"] = int(data.get("resume_score", 70))
     return data
 
