@@ -10,7 +10,7 @@ CORS(app, origins=["http://localhost:5173", "https://job-genie-tan.vercel.app"])
 
 GROQ_API_KEY = os.environ.get("GROQ_API_KEY", "")
 GROQ_URL     = "https://api.groq.com/openai/v1/chat/completions"
-JSEARCH_KEY  = os.environ.get("JSEARCH_KEY", "")
+JSEARCH_KEY  = os.environ.get("JSEARCH_KEY", "").strip()
 JSEARCH_URL  = "https://jsearch.p.rapidapi.com/search"
 DB_PATH      = os.path.join(os.path.dirname(os.path.abspath(__file__)), "jobgenie.db")
 
@@ -132,6 +132,11 @@ def ask_groq(text):
     match = re.search(r'\{.*\}', raw, re.DOTALL)
     if match:
         raw = match.group(0)
+    # If JSON is truncated, try to fix it
+    if raw and not raw.endswith('}'):
+        last_brace = raw.rfind('}')
+        if last_brace != -1:
+            raw = raw[:last_brace+1]
     if not raw:
         raise Exception("Groq returned empty response after stripping")
     data = json.loads(raw)
