@@ -19,52 +19,39 @@ export default function Navbar({ onToggle }) {
   const title = TITLES[pathname] || 'JobGenie';
 
   return (
-    <header className="er-navbar sticky top-0 z-10 px-4 md:px-6"
-      style={{ height: '58px', display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+    <header className="er-navbar sticky top-0 z-10"
+      style={{ height: '58px', display: 'flex', alignItems: 'center', padding: '0 1.5rem', gap: '0.75rem' }}>
 
       {/* Hamburger */}
       <button onClick={onToggle} aria-label="Menu"
-        style={{
-          display: 'flex', flexDirection: 'column', gap: '5px',
-          padding: '8px', borderRadius: '10px', border: 'none',
-          background: 'transparent', cursor: 'pointer', transition: 'background 0.15s',
-        }}
-        onMouseEnter={e => e.currentTarget.style.background = 'var(--er-purple-tint)'}
+        style={{ display:'flex', flexDirection:'column', gap:'5px', padding:'8px', borderRadius:'10px', border:'none', background:'transparent', cursor:'pointer', transition:'background 0.15s' }}
+        onMouseEnter={e => e.currentTarget.style.background = 'rgba(142,69,133,0.08)'}
         onMouseLeave={e => e.currentTarget.style.background = 'transparent'}>
         {[0,1,2].map(i => (
-          <span key={i} style={{ display: 'block', width: '20px', height: '2px', borderRadius: '2px', background: 'var(--er-dark)', transition: 'background 0.15s' }} />
+          <span key={i} style={{ display:'block', width:'20px', height:'2px', borderRadius:'2px', background:'var(--rose-dark)' }} />
         ))}
       </button>
 
-      {/* Logo */}
       <Logo size={26} showText={false} />
 
-      {/* Divider */}
-      <span style={{ width: '1px', height: '20px', background: 'var(--er-border)', flexShrink: 0 }} />
+      <span style={{ width:'1px', height:'18px', background:'var(--rose-border)', flexShrink:0 }} />
 
-      {/* Page title */}
-      <h1 style={{ fontSize: '0.9rem', fontWeight: 600, color: 'var(--er-dark)', margin: 0, letterSpacing: '-0.01em' }}>{title}</h1>
+      <h1 style={{ fontSize:'0.9rem', fontWeight:600, color:'var(--rose-dark)', letterSpacing:'-0.01em' }}>{title}</h1>
 
-      <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: '6px' }}>
+      <div style={{ marginLeft:'auto', display:'flex', alignItems:'center', gap:'6px' }}>
         <NotificationBell />
 
-        {/* Profile pill */}
         <button onClick={() => navigate('/profile')}
-          style={{
-            display: 'flex', alignItems: 'center', gap: '8px',
-            padding: '5px 10px 5px 5px', borderRadius: '999px',
-            border: '1px solid var(--er-border)', background: 'transparent',
-            cursor: 'pointer', transition: 'all 0.18s ease',
-          }}
-          onMouseEnter={e => { e.currentTarget.style.background = 'var(--er-purple-tint)'; e.currentTarget.style.borderColor = 'rgba(142,69,133,0.3)'; }}
-          onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.borderColor = 'var(--er-border)'; }}>
+          style={{ display:'flex', alignItems:'center', gap:'8px', padding:'5px 12px 5px 5px', borderRadius:'999px', border:'1px solid var(--rose-border)', background:'transparent', cursor:'pointer', transition:'all 0.18s ease' }}
+          onMouseEnter={e => { e.currentTarget.style.background='rgba(142,69,133,0.07)'; e.currentTarget.style.borderColor='rgba(142,69,133,0.3)'; }}
+          onMouseLeave={e => { e.currentTarget.style.background='transparent'; e.currentTarget.style.borderColor='var(--rose-border)'; }}>
           <Avatar avatar={profile.avatar} name={profile.name} size="sm" />
-          <div className="hidden sm:flex" style={{ flexDirection: 'column', alignItems: 'flex-start', lineHeight: 1.2 }}>
-            <span style={{ fontSize: '0.72rem', fontWeight: 700, color: 'var(--er-purple)', maxWidth: '90px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+          <div className="hidden sm:block" style={{ textAlign:'left', lineHeight:1.2 }}>
+            <div style={{ fontSize:'0.72rem', fontWeight:700, color:'var(--rose-accent)', maxWidth:'90px', overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>
               {profile.username ? `@${profile.username}` : profile.name || 'Profile'}
-            </span>
+            </div>
             {profile.name && profile.username && (
-              <span style={{ fontSize: '0.68rem', color: 'var(--er-mauve)', maxWidth: '90px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{profile.name}</span>
+              <div style={{ fontSize:'0.68rem', color:'var(--rose-secondary)', maxWidth:'90px', overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{profile.name}</div>
             )}
           </div>
         </button>

@@ -20,28 +20,29 @@ const initialForm = () => ({
 });
 
 const Field = ({ label, required, ...props }) => (
-  <div className="flex flex-col gap-1">
-    <label className="text-xs font-semibold" style={{ color: 'var(--rose-secondary)' }}>
-      {label}{required && <span className="text-red-500 ml-0.5">*</span>}
+  <div style={{ display:'flex', flexDirection:'column', gap:'0.375rem' }}>
+    <label className="rose-label">
+      {label}{required && <span style={{ color:'var(--rose-accent)', marginLeft:'2px' }}>*</span>}
     </label>
     <input {...props} className="rose-input" />
   </div>
 );
 
 const TextArea = ({ label, required, ...props }) => (
-  <div className="flex flex-col gap-1">
-    <label className="text-xs font-semibold" style={{ color: 'var(--rose-secondary)' }}>
-      {label}{required && <span className="text-red-500 ml-0.5">*</span>}
+  <div style={{ display:'flex', flexDirection:'column', gap:'0.375rem' }}>
+    <label className="rose-label">
+      {label}{required && <span style={{ color:'var(--rose-accent)', marginLeft:'2px' }}>*</span>}
     </label>
-    <textarea rows={3} {...props} className="rose-input resize-y" />
+    <textarea rows={3} {...props} className="rose-input" style={{ resize:'vertical' }} />
   </div>
 );
 
 const SectionCard = ({ title, icon, children }) => (
-  <div className="rose-card space-y-4">
-    <h2 className="text-sm font-bold flex items-center gap-2" style={{ color: 'var(--rose-dark)' }}>
-      <span style={{ color: 'var(--rose-purple)' }}>{icon}</span>{title}
-    </h2>
+  <div className="rose-card" style={{ display:'flex', flexDirection:'column', gap:'1rem' }}>
+    <div style={{ display:'flex', alignItems:'center', gap:'0.625rem' }}>
+      <div className="er-icon-box" style={{ fontSize:'0.9rem' }}>{icon}</div>
+      <h2 style={{ fontSize:'0.9375rem', fontWeight:700, color:'var(--rose-dark)' }}>{title}</h2>
+    </div>
     {children}
   </div>
 );
@@ -117,10 +118,9 @@ export default function ResumeGenerator() {
   return (
     <div className="max-w-4xl mx-auto space-y-6 pb-10">
 
-      <div className="rounded-2xl p-6 text-white"
-        style={{ background: 'linear-gradient(135deg, var(--rose-purple) 0%, var(--rose-secondary) 100%)' }}>
-        <h1 className="text-2xl font-bold mb-1">📄 Fresher Resume Generator</h1>
-        <p className="text-sm" style={{ color: 'rgba(255,255,255,0.8)' }}>
+      <div className="er-page-header">
+        <h1 style={{ fontSize:'1.5rem', fontWeight:800, marginBottom:'0.375rem', letterSpacing:'-0.01em' }}>📄 Fresher Resume Generator</h1>
+        <p style={{ fontSize:'0.875rem', color:'rgba(255,255,255,0.82)', lineHeight:1.6 }}>
           Fill in your details below. We'll generate a professional, ATS-friendly PDF resume for you.
         </p>
       </div>
@@ -233,12 +233,12 @@ export default function ResumeGenerator() {
       {/* Achievements */}
       <SectionCard title="Achievements" icon="🌟">
         {form.achievements.map((ach, i) => (
-          <div key={i} className="flex gap-2 items-center">
+          <div key={i} style={{ display:'flex', gap:'0.5rem', alignItems:'center' }}>
             <input value={ach} onChange={e => { const arr=[...form.achievements]; arr[i]=e.target.value; setForm(f=>({...f,achievements:arr})); }}
-              placeholder="Won 1st place in National Hackathon 2023" className="rose-input flex-1" />
+              placeholder="Won 1st place in National Hackathon 2023" className="rose-input" style={{ flex:1 }} />
             {form.achievements.length > 1 && (
               <button onClick={() => setForm(f => ({ ...f, achievements: f.achievements.filter((_, idx) => idx !== i) }))}
-                className="text-red-400 hover:text-red-600 text-lg font-bold">✕</button>
+                style={{ color:'#ef4444', background:'none', border:'none', cursor:'pointer', fontSize:'1.1rem', fontWeight:700 }}>✕</button>
             )}
           </div>
         ))}

@@ -1,93 +1,187 @@
 @import "tailwindcss";
 
-/* ═══════════════════════════════════════════════════════════════
-   EVENING ROSE — Complete Design System
-   ═══════════════════════════════════════════════════════════════ */
+/* ═══════════════════════════════════════════════════════════════════════════
+   EVENING ROSE — Master Design System
+   ═══════════════════════════════════════════════════════════════════════════ */
 :root {
   /* Core palette */
-  --er-rose:      #DCA1A1;   /* primary rose */
-  --er-mauve:     #996666;   /* muted mauve / secondary */
-  --er-purple:    #8E4585;   /* deep mauve / primary action */
-  --er-dark:      #4A4A4A;   /* charcoal / primary text */
-  --er-hover:     #7a3a72;   /* darker purple for hover */
+  --rose-primary:    #DCA1A1;   /* soft rose */
+  --rose-secondary:  #996666;   /* muted rose/brown */
+  --rose-accent:     #8E4585;   /* deep mauve – primary action */
+  --rose-dark:       #4A4A4A;   /* charcoal – primary text */
 
-  /* Surfaces */
-  --er-bg:        #faf2f2;   /* rich rose-tinted page background */
-  --er-bg2:       #f5e8e8;   /* slightly deeper background for depth */
-  --er-surface:   #ffffff;   /* card surface */
-  --er-surface2:  #fdf7f7;   /* slightly tinted surface */
+  /* Alias so old code still works */
+  --rose-purple:     #8E4585;
+  --rose-hover:      #7a3a72;
+  --er-purple:       #8E4585;
+  --er-mauve:        #996666;
+  --er-rose:         #DCA1A1;
+  --er-dark:         #4A4A4A;
+  --er-hover:        #7a3a72;
+
+  /* Backgrounds */
+  --rose-background: #FFF7F8;   /* page background */
+  --rose-bg:         #FFF7F8;
+  --er-bg:           #FFF7F8;
+  --rose-surface:    #FFFDFD;   /* card surface */
+  --er-surface:      #FFFDFD;
+  --rose-surface2:   #FFF9F9;   /* input background */
+  --er-surface2:     #FFF9F9;
 
   /* Borders */
-  --er-border:    #e2c5c5;   /* main border */
-  --er-border2:   #d4b0b0;   /* stronger border */
+  --rose-border:     #E8CECE;
+  --er-border:       #E8CECE;
+  --rose-border2:    #D4B0B0;
+  --er-border2:      #D4B0B0;
 
-  /* Tint backgrounds */
-  --er-purple-tint: #f3eaf3;  /* light purple tint */
-  --er-rose-tint:   #fdf0f0;  /* light rose tint */
-  --er-warm-tint:   #faf0ee;  /* warm rose tint */
-
-  /* Aliases for backward compatibility */
-  --rose-primary:   #DCA1A1;
-  --rose-secondary: #996666;
-  --rose-purple:    #8E4585;
-  --rose-dark:      #4A4A4A;
-  --rose-bg:        #faf2f2;
-  --rose-surface:   #ffffff;
-  --rose-border:    #e2c5c5;
-  --rose-light:     #f3eaf3;
-  --rose-warm:      #faf0ee;
-  --rose-hover:     #7a3a72;
+  /* Tints */
+  --rose-light:      #F5EAF5;   /* purple-tinted */
+  --rose-warm:       #FDF0EE;   /* warm rose tint */
+  --er-purple-tint:  #F5EAF5;
+  --er-rose-tint:    #FFF3F3;
+  --er-warm-tint:    #FDF0EE;
 }
 
-/* ── Global ──────────────────────────────────────────────────── */
-*, *::before, *::after { box-sizing: border-box; }
+/* ── Global base ─────────────────────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+html { font-size: 16px; }
 
 body {
-  background: var(--er-bg);
-  color: var(--er-dark);
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  background: var(--rose-background);
+  color: var(--rose-dark);
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto,
+               'Helvetica Neue', Arial, sans-serif;
   -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  line-height: 1.5;
 }
 
-/* Rich page background with gradient */
 #root {
   min-height: 100vh;
   background:
-    radial-gradient(ellipse at 0% 0%, rgba(220,161,161,0.18) 0%, transparent 60%),
-    radial-gradient(ellipse at 100% 100%, rgba(142,69,133,0.08) 0%, transparent 60%),
-    var(--er-bg);
+    radial-gradient(ellipse 60% 50% at 0% 0%, rgba(220,161,161,0.13) 0%, transparent 100%),
+    radial-gradient(ellipse 50% 60% at 100% 100%, rgba(142,69,133,0.07) 0%, transparent 100%),
+    var(--rose-background);
 }
 
-/* ── Scrollbar ───────────────────────────────────────────────── */
+/* ── Kill ALL browser blue on inputs (autofill, focus, selection) ──── */
+input, textarea, select, button {
+  font-family: inherit;
+  color: var(--rose-dark);
+}
+
+/* Override browser autofill blue background */
+input:-webkit-autofill,
+input:-webkit-autofill:hover,
+input:-webkit-autofill:focus,
+input:-webkit-autofill:active,
+textarea:-webkit-autofill,
+textarea:-webkit-autofill:hover,
+textarea:-webkit-autofill:focus,
+select:-webkit-autofill,
+select:-webkit-autofill:hover,
+select:-webkit-autofill:focus {
+  -webkit-box-shadow: 0 0 0 1000px #FFF9F9 inset !important;
+  box-shadow: 0 0 0 1000px #FFF9F9 inset !important;
+  -webkit-text-fill-color: #4A4A4A !important;
+  background-color: #FFF9F9 !important;
+  border-color: var(--rose-primary) !important;
+  caret-color: var(--rose-accent);
+}
+
+/* Override blue focus ring on all elements */
+*:focus { outline: none; }
+*:focus-visible {
+  outline: 2px solid rgba(142,69,133,0.4);
+  outline-offset: 2px;
+}
+
+/* ── Scrollbar ──────────────────────────────────────────────────────── */
 ::-webkit-scrollbar { width: 5px; height: 5px; }
 ::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: var(--er-rose); border-radius: 10px; }
-::-webkit-scrollbar-thumb:hover { background: var(--er-mauve); }
+::-webkit-scrollbar-thumb { background: var(--rose-primary); border-radius: 10px; }
+::-webkit-scrollbar-thumb:hover { background: var(--rose-secondary); }
 
-/* ══════════════════════════════════════════════════════════════
-   BUTTON SYSTEM
-   ══════════════════════════════════════════════════════════════ */
+/* ══════════════════════════════════════════════════════════════════════
+   INPUTS — all form controls share one system, NO blue anywhere
+   ══════════════════════════════════════════════════════════════════════ */
+.rose-input,
+.rose-select {
+  display: block;
+  width: 100%;
+  background: #FFF9F9;
+  border: 1.5px solid var(--rose-primary);
+  border-radius: 10px;
+  padding: 0.65rem 1rem;
+  font-size: 0.875rem;
+  color: var(--rose-dark);
+  outline: none;
+  transition: border-color 0.18s ease, box-shadow 0.18s ease, background 0.18s ease;
+  /* kill blue everywhere */
+  -webkit-tap-highlight-color: transparent;
+}
+
+.rose-input::placeholder {
+  color: var(--rose-secondary);
+  opacity: 0.6;
+}
+
+.rose-input:hover { border-color: var(--rose-secondary); }
+
+.rose-input:focus {
+  border-color: var(--rose-accent);
+  background: #FFFBFB;
+  box-shadow: 0 0 0 3px rgba(142,69,133,0.12);
+}
+
+textarea.rose-input { resize: vertical; }
+
+/* Select — custom arrow, no browser default */
+.rose-select {
+  appearance: none;
+  -webkit-appearance: none;
+  padding-right: 2.5rem;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%23996666' stroke-width='1.5' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 0.875rem center;
+  cursor: pointer;
+}
+
+.rose-select:hover { border-color: var(--rose-secondary); }
+
+.rose-select:focus {
+  border-color: var(--rose-accent);
+  background-color: #FFFBFB;
+  box-shadow: 0 0 0 3px rgba(142,69,133,0.12);
+}
+
+/* ══════════════════════════════════════════════════════════════════════
+   BUTTONS
+   ══════════════════════════════════════════════════════════════════════ */
 .btn-primary {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  background: var(--er-purple);
+  gap: 0.5rem;
+  background: var(--rose-accent);
   color: #fff;
   border: none;
-  border-radius: 0.875rem;
+  border-radius: 12px;
   font-weight: 600;
   font-size: 0.9rem;
   padding: 0.75rem 1.75rem;
   cursor: pointer;
-  transition: background 0.18s ease, transform 0.12s ease, box-shadow 0.18s ease;
-  box-shadow: 0 2px 8px rgba(142,69,133,0.25);
-  letter-spacing: 0.01em;
   text-decoration: none;
+  letter-spacing: 0.01em;
+  transition: background 0.18s ease, transform 0.12s ease, box-shadow 0.18s ease;
+  box-shadow: 0 2px 8px rgba(142,69,133,0.28);
+  white-space: nowrap;
 }
 .btn-primary:hover:not(:disabled) {
-  background: var(--er-hover);
+  background: var(--rose-hover);
   transform: translateY(-1px);
-  box-shadow: 0 4px 14px rgba(142,69,133,0.35);
+  box-shadow: 0 4px 16px rgba(142,69,133,0.35);
 }
 .btn-primary:active:not(:disabled) { transform: translateY(0); }
 .btn-primary:disabled { opacity: 0.42; cursor: not-allowed; box-shadow: none; }
@@ -96,29 +190,31 @@ body {
   display: inline-flex;
   align-items: center;
   justify-content: center;
+  gap: 0.5rem;
   background: transparent;
-  color: var(--er-mauve);
-  border: 1.5px solid var(--er-border2);
-  border-radius: 0.875rem;
+  color: var(--rose-secondary);
+  border: 1.5px solid var(--rose-border2);
+  border-radius: 12px;
   font-weight: 600;
   font-size: 0.9rem;
   padding: 0.75rem 1.75rem;
   cursor: pointer;
   transition: all 0.18s ease;
+  white-space: nowrap;
 }
 .btn-secondary:hover {
-  background: var(--er-warm-tint);
-  border-color: var(--er-mauve);
-  color: var(--er-purple);
+  background: var(--rose-warm);
+  border-color: var(--rose-secondary);
+  color: var(--rose-accent);
 }
 
-/* ══════════════════════════════════════════════════════════════
-   CARD SYSTEM
-   ══════════════════════════════════════════════════════════════ */
+/* ══════════════════════════════════════════════════════════════════════
+   CARDS
+   ══════════════════════════════════════════════════════════════════════ */
 .rose-card {
-  background: var(--er-surface);
-  border-radius: 1.125rem;
-  border: 1px solid var(--er-border);
+  background: var(--rose-surface);
+  border-radius: 18px;
+  border: 1px solid var(--rose-border);
   box-shadow: 0 1px 3px rgba(142,69,133,0.05), 0 4px 16px rgba(220,161,161,0.08);
   padding: 1.5rem;
   transition: box-shadow 0.2s ease;
@@ -127,91 +223,95 @@ body {
   box-shadow: 0 2px 8px rgba(142,69,133,0.08), 0 6px 24px rgba(220,161,161,0.12);
 }
 
-/* Premium card variant */
 .rose-card-premium {
-  background: linear-gradient(145deg, #ffffff 0%, var(--er-rose-tint) 100%);
-  border-radius: 1.25rem;
-  border: 1px solid var(--er-border);
+  background: linear-gradient(150deg, #FFFDFD 0%, #FFF3F3 100%);
+  border-radius: 20px;
+  border: 1px solid var(--rose-border);
   box-shadow: 0 2px 8px rgba(142,69,133,0.07), 0 8px 32px rgba(220,161,161,0.1);
   padding: 1.75rem;
 }
 
-/* ══════════════════════════════════════════════════════════════
-   FORM CONTROLS
-   ══════════════════════════════════════════════════════════════ */
-.rose-input {
-  width: 100%;
-  background: var(--er-surface);
-  border: 1.5px solid var(--er-border);
-  border-radius: 0.75rem;
-  padding: 0.65rem 1rem;
-  font-size: 0.875rem;
-  color: var(--er-dark);
-  outline: none;
-  transition: border-color 0.18s ease, box-shadow 0.18s ease, background 0.18s ease;
-  appearance: none;
-  -webkit-appearance: none;
-}
-.rose-input::placeholder { color: var(--er-mauve); opacity: 0.65; }
-.rose-input:hover { border-color: var(--er-rose); }
-.rose-input:focus {
-  border-color: var(--er-purple);
-  box-shadow: 0 0 0 3px rgba(142,69,133,0.13);
-  background: var(--er-surface);
-}
-
-/* Custom select arrow */
-.rose-select {
-  width: 100%;
-  background: var(--er-surface)
-    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%23996666' stroke-width='1.5' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E")
-    no-repeat right 0.875rem center;
-  border: 1.5px solid var(--er-border);
-  border-radius: 0.75rem;
-  padding: 0.65rem 2.5rem 0.65rem 1rem;
-  font-size: 0.875rem;
-  color: var(--er-dark);
-  outline: none;
+/* ══════════════════════════════════════════════════════════════════════
+   UPLOAD ZONE
+   ══════════════════════════════════════════════════════════════════════ */
+.upload-zone {
+  border: 2px dashed var(--rose-primary);
+  border-radius: 14px;
+  padding: 2rem 1.5rem;
+  text-align: center;
   cursor: pointer;
-  transition: border-color 0.18s ease, box-shadow 0.18s ease;
-  appearance: none;
-  -webkit-appearance: none;
+  background: #FFF3F3;
+  position: relative;
+  overflow: hidden;
+  transition: all 0.22s ease;
 }
-.rose-select:hover { border-color: var(--er-rose); }
-.rose-select:focus {
-  border-color: var(--er-purple);
-  box-shadow: 0 0 0 3px rgba(142,69,133,0.13);
+.upload-zone:hover {
+  border-color: var(--rose-secondary);
+  background: var(--rose-warm);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 16px rgba(220,161,161,0.18);
+}
+.upload-zone.drag-over {
+  border-color: var(--rose-accent);
+  background: var(--rose-light);
+  box-shadow: 0 0 0 3px rgba(142,69,133,0.12), 0 4px 16px rgba(142,69,133,0.12);
+}
+.upload-zone.has-file {
+  border-style: solid;
+  border-color: var(--rose-secondary);
+  background: var(--rose-warm);
 }
 
-/* ══════════════════════════════════════════════════════════════
-   TYPOGRAPHY HELPERS
-   ══════════════════════════════════════════════════════════════ */
+/* ══════════════════════════════════════════════════════════════════════
+   NAVBAR
+   ══════════════════════════════════════════════════════════════════════ */
+.er-navbar {
+  background: linear-gradient(90deg, #FFFDFD 0%, #FFF3F3 100%);
+  border-bottom: 1px solid var(--rose-border);
+  box-shadow: 0 1px 0 var(--rose-border), 0 2px 8px rgba(220,161,161,0.06);
+}
+
+/* ══════════════════════════════════════════════════════════════════════
+   SIDEBAR
+   ══════════════════════════════════════════════════════════════════════ */
+.er-sidebar {
+  background: linear-gradient(180deg, #FFFDFD 0%, #FFF3F3 100%);
+  border-right: 1px solid var(--rose-border);
+  box-shadow: 3px 0 20px rgba(142,69,133,0.07);
+}
+
+/* ══════════════════════════════════════════════════════════════════════
+   TYPOGRAPHY UTILITIES
+   ══════════════════════════════════════════════════════════════════════ */
 .rose-heading {
   font-size: 1rem;
   font-weight: 700;
-  color: var(--er-dark);
+  color: var(--rose-dark);
   letter-spacing: -0.01em;
 }
+
 .rose-section-title {
   font-size: 0.68rem;
   font-weight: 700;
   letter-spacing: 0.09em;
   text-transform: uppercase;
-  color: var(--er-purple);
+  color: var(--rose-accent);
 }
+
 .rose-label {
+  display: block;
   font-size: 0.75rem;
   font-weight: 600;
-  color: var(--er-mauve);
-  display: block;
+  color: var(--rose-secondary);
   margin-bottom: 0.375rem;
 }
-.rose-body { font-size: 0.875rem; color: var(--er-dark); }
-.rose-muted { font-size: 0.8125rem; color: var(--er-mauve); }
 
-/* ══════════════════════════════════════════════════════════════
-   TAG / BADGE
-   ══════════════════════════════════════════════════════════════ */
+.rose-body   { font-size: 0.875rem; color: var(--rose-dark); }
+.rose-muted  { font-size: 0.8125rem; color: var(--rose-secondary); }
+
+/* ══════════════════════════════════════════════════════════════════════
+   TAGS / BADGES
+   ══════════════════════════════════════════════════════════════════════ */
 .rose-tag {
   display: inline-flex;
   align-items: center;
@@ -219,85 +319,28 @@ body {
   border-radius: 9999px;
   font-size: 0.8rem;
   font-weight: 500;
-  background: var(--er-purple-tint);
-  color: var(--er-purple);
+  background: var(--rose-light);
+  color: var(--rose-accent);
   border: 1px solid rgba(142,69,133,0.2);
 }
 
-/* ══════════════════════════════════════════════════════════════
-   UPLOAD ZONE
-   ══════════════════════════════════════════════════════════════ */
-.upload-zone {
-  border: 2px dashed var(--er-rose);
-  border-radius: 1rem;
-  padding: 2rem 1.5rem;
-  text-align: center;
-  cursor: pointer;
-  transition: all 0.22s ease;
-  background: var(--er-rose-tint);
-  position: relative;
-  overflow: hidden;
-}
-.upload-zone::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background: radial-gradient(ellipse at center, rgba(220,161,161,0.12) 0%, transparent 70%);
-  pointer-events: none;
-}
-.upload-zone:hover {
-  border-color: var(--er-mauve);
-  background: var(--er-warm-tint);
-  transform: translateY(-1px);
-  box-shadow: 0 4px 16px rgba(220,161,161,0.2);
-}
-.upload-zone.drag-over {
-  border-color: var(--er-purple);
-  background: var(--er-purple-tint);
-  box-shadow: 0 0 0 3px rgba(142,69,133,0.13), 0 4px 16px rgba(142,69,133,0.15);
-}
-.upload-zone.has-file {
-  border-color: var(--er-mauve);
-  background: var(--er-warm-tint);
-  border-style: solid;
+.er-source-badge {
+  font-size: 0.7rem;
+  padding: 0.2rem 0.6rem;
+  border-radius: 9999px;
+  background: var(--rose-warm);
+  color: var(--rose-secondary);
+  border: 1px solid var(--rose-border);
+  font-weight: 500;
 }
 
-/* ══════════════════════════════════════════════════════════════
-   NAVBAR
-   ══════════════════════════════════════════════════════════════ */
-.er-navbar {
-  background: linear-gradient(90deg, #ffffff 0%, var(--er-rose-tint) 100%);
-  border-bottom: 1px solid var(--er-border);
-  box-shadow: 0 1px 0 var(--er-border), 0 2px 8px rgba(220,161,161,0.08);
-}
-
-/* ══════════════════════════════════════════════════════════════
-   SIDEBAR
-   ══════════════════════════════════════════════════════════════ */
-.er-sidebar {
-  background: linear-gradient(180deg, #ffffff 0%, var(--er-rose-tint) 100%);
-  border-right: 1px solid var(--er-border);
-  box-shadow: 2px 0 16px rgba(142,69,133,0.07);
-}
-
-/* ══════════════════════════════════════════════════════════════
-   PAGE HEADER (gradient banner)
-   ══════════════════════════════════════════════════════════════ */
-.er-page-header {
-  background: linear-gradient(135deg, var(--er-purple) 0%, #b05ea8 50%, var(--er-mauve) 100%);
-  border-radius: 1.25rem;
-  padding: 1.75rem;
-  color: white;
-  box-shadow: 0 4px 20px rgba(142,69,133,0.3);
-}
-
-/* ══════════════════════════════════════════════════════════════
+/* ══════════════════════════════════════════════════════════════════════
    JOB CARD
-   ══════════════════════════════════════════════════════════════ */
+   ══════════════════════════════════════════════════════════════════════ */
 .er-job-card {
-  background: var(--er-surface);
-  border-radius: 1.125rem;
-  border: 1px solid var(--er-border);
+  background: var(--rose-surface);
+  border-radius: 18px;
+  border: 1px solid var(--rose-border);
   padding: 1.25rem 1.5rem;
   transition: all 0.2s ease;
   box-shadow: 0 1px 3px rgba(142,69,133,0.04);
@@ -305,25 +348,64 @@ body {
 .er-job-card:hover {
   transform: translateY(-2px);
   box-shadow: 0 4px 16px rgba(142,69,133,0.1), 0 1px 3px rgba(220,161,161,0.15);
-  border-color: var(--er-rose);
+  border-color: var(--rose-primary);
 }
 
-/* ══════════════════════════════════════════════════════════════
+/* ══════════════════════════════════════════════════════════════════════
+   PAGE HEADER BANNER
+   ══════════════════════════════════════════════════════════════════════ */
+.er-page-header {
+  background: linear-gradient(135deg, var(--rose-accent) 0%, #a0558e 50%, var(--rose-secondary) 100%);
+  border-radius: 20px;
+  padding: 1.75rem;
+  color: white;
+  box-shadow: 0 4px 20px rgba(142,69,133,0.28);
+}
+
+/* ══════════════════════════════════════════════════════════════════════
    MISC
-   ══════════════════════════════════════════════════════════════ */
+   ══════════════════════════════════════════════════════════════════════ */
 .er-divider {
   height: 1px;
-  background: linear-gradient(90deg, transparent, var(--er-border), transparent);
+  background: linear-gradient(90deg, transparent, var(--rose-border), transparent);
   border: none;
   margin: 0.75rem 0;
 }
 
-.er-source-badge {
-  font-size: 0.7rem;
-  padding: 0.2rem 0.6rem;
-  border-radius: 9999px;
-  background: var(--er-warm-tint);
-  color: var(--er-mauve);
-  border: 1px solid var(--er-border);
-  font-weight: 500;
+.er-icon-box {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  background: var(--rose-light);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1rem;
+  flex-shrink: 0;
 }
+
+/* Override any Tailwind blue that might slip through */
+.focus\:ring-indigo-500:focus,
+.focus\:ring-indigo-400:focus,
+.focus\:ring-2:focus {
+  --tw-ring-color: rgba(142,69,133,0.25) !important;
+}
+.focus\:border-indigo-500:focus,
+.focus\:border-indigo-400:focus {
+  border-color: var(--rose-accent) !important;
+}
+.bg-indigo-50   { background-color: var(--rose-light) !important; }
+.bg-indigo-100  { background-color: var(--rose-light) !important; }
+.bg-indigo-600  { background-color: var(--rose-accent) !important; }
+.bg-indigo-700  { background-color: var(--rose-hover) !important; }
+.text-indigo-600 { color: var(--rose-accent) !important; }
+.text-indigo-700 { color: var(--rose-accent) !important; }
+.border-indigo-200 { border-color: var(--rose-border) !important; }
+.hover\:bg-indigo-50:hover  { background-color: var(--rose-light) !important; }
+.hover\:bg-indigo-700:hover { background-color: var(--rose-hover) !important; }
+.ring-indigo-400 { --tw-ring-color: rgba(142,69,133,0.3) !important; }
+.ring-indigo-500 { --tw-ring-color: rgba(142,69,133,0.3) !important; }
+.from-indigo-600 { --tw-gradient-from: var(--rose-accent) !important; }
+.to-purple-600   { --tw-gradient-to: var(--rose-secondary) !important; }
+.from-indigo-50  { --tw-gradient-from: var(--rose-light) !important; }
+.to-purple-50    { --tw-gradient-to: var(--rose-warm) !important; }
