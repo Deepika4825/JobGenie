@@ -7,14 +7,12 @@ export default function Layout() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   return (
-    <div style={{ height: '100vh', overflow: 'hidden', background: 'var(--er-bg)' }}>
+    <div style={{ height:'100vh', overflow:'hidden', background:'var(--rose-background)' }}>
       <Sidebar open={sidebarOpen} onClose={() => setSidebarOpen(false)} />
-      <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
-        <Navbar onToggle={() => setSidebarOpen((p) => !p)} />
-        <main style={{ flex: 1, overflowY: 'auto', padding: '1.5rem 1rem' }}>
-          <div style={{ maxWidth: '1100px', margin: '0 auto' }}>
-            <Outlet />
-          </div>
+      <div style={{ display:'flex', flexDirection:'column', height:'100%' }}>
+        <Navbar onToggle={() => setSidebarOpen(p => !p)} />
+        <main style={{ flex:1, overflowY:'auto', padding:'2rem 2.5rem' }}>
+          <Outlet />
         </main>
       </div>
     </div>

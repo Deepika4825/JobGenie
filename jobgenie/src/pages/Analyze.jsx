@@ -43,7 +43,7 @@ export default function Analyze() {
         <>
           <ScoreCard score={data.resume_score} />
 
-          <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fit, minmax(280px, 1fr))', gap:'1.25rem' }}>
+          <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:'1.25rem' }}>
             {/* Extracted Skills */}
             <div className="rose-card">
               <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:'1rem' }}>
@@ -107,7 +107,7 @@ export default function Analyze() {
               </div>
               <h2 style={{ fontSize:'0.9375rem', fontWeight:700, color:'var(--rose-dark)' }}>Resume Insights</h2>
             </div>
-            <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fit, minmax(240px, 1fr))', gap:'0.875rem' }}>
+            <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:'0.875rem' }}>
               {data.suggestions.map((tip,i) => (
                 <div key={i} style={{ display:'flex', gap:'0.625rem', background:'var(--rose-warm)', border:'1px solid var(--rose-border)', borderRadius:'12px', padding:'1rem' }}>
                   <span style={{ fontWeight:700, fontSize:'0.875rem', color:'var(--rose-secondary)', flexShrink:0, marginTop:'1px' }}>{i+1}.</span>
