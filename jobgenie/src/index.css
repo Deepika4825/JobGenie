@@ -1,11 +1,99 @@
 @import "tailwindcss";
 
+/* ── Evening Rose Design Tokens ────────────────────────────────────────────── */
 :root {
-  --primary: #8E4585;
-  --primary-dark: #7a3a72;
-  --primary-light: #f5eef5;
-  --secondary: #996666;
-  --secondary-light: #f7f0ee;
-  --accent: #DCA1A1;
-  --dark: #4A4A4A;
+  --rose-primary:   #DCA1A1;   /* soft rose – accent / backgrounds */
+  --rose-secondary: #996666;   /* muted mauve – secondary text, borders */
+  --rose-purple:    #8E4585;   /* purple/mauve – primary interactive */
+  --rose-dark:      #4A4A4A;   /* charcoal – primary text */
+
+  /* Derived tints */
+  --rose-bg:        #fdf6f6;   /* page background */
+  --rose-surface:   #ffffff;   /* card surface */
+  --rose-border:    #e8d0d0;   /* subtle border */
+  --rose-light:     #f5eef5;   /* purple tint bg */
+  --rose-warm:      #f7f0ee;   /* warm rose tint bg */
+  --rose-hover:     #7a3a72;   /* darker purple for hover */
+}
+
+/* ── Global reset ───────────────────────────────────────────────────────────── */
+body {
+  background-color: var(--rose-bg);
+  color: var(--rose-dark);
+}
+
+/* ── Scrollbar ──────────────────────────────────────────────────────────────── */
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: var(--rose-bg); }
+::-webkit-scrollbar-thumb { background: var(--rose-primary); border-radius: 3px; }
+
+/* ── Utility classes for the theme ─────────────────────────────────────────── */
+.btn-primary {
+  background-color: var(--rose-purple);
+  color: white;
+  border-radius: 0.75rem;
+  font-weight: 600;
+  padding: 0.75rem 1.5rem;
+  transition: background-color 0.15s ease;
+  border: none;
+  cursor: pointer;
+}
+.btn-primary:hover:not(:disabled) { background-color: var(--rose-hover); }
+.btn-primary:disabled { opacity: 0.45; cursor: not-allowed; }
+
+.btn-secondary {
+  background-color: transparent;
+  color: var(--rose-secondary);
+  border-radius: 0.75rem;
+  font-weight: 600;
+  padding: 0.75rem 1.5rem;
+  border: 1.5px solid var(--rose-border);
+  transition: all 0.15s ease;
+  cursor: pointer;
+}
+.btn-secondary:hover { background-color: var(--rose-warm); border-color: var(--rose-secondary); }
+
+.rose-card {
+  background: var(--rose-surface);
+  border-radius: 1rem;
+  border: 1px solid var(--rose-border);
+  box-shadow: 0 1px 4px rgba(142, 69, 133, 0.06);
+  padding: 1.5rem;
+}
+
+.rose-input {
+  width: 100%;
+  background: white;
+  border: 1.5px solid var(--rose-border);
+  border-radius: 0.75rem;
+  padding: 0.625rem 1rem;
+  font-size: 0.875rem;
+  color: var(--rose-dark);
+  outline: none;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+.rose-input::placeholder { color: var(--rose-secondary); opacity: 0.7; }
+.rose-input:focus {
+  border-color: var(--rose-purple);
+  box-shadow: 0 0 0 3px rgba(142, 69, 133, 0.12);
+}
+
+.rose-section-title {
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--rose-purple);
+}
+
+.rose-tag {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.25rem 0.875rem;
+  border-radius: 9999px;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  background: var(--rose-light);
+  color: var(--rose-purple);
+  border: 1px solid var(--rose-primary);
 }

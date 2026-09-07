@@ -9,12 +9,11 @@ const INTEREST_OPTIONS = [
   'Blockchain','Game Development','AI Research','Product Management',
 ];
 const YEARS = Array.from({ length: 10 }, (_, i) => String(2020 + i));
-const inp = 'w-full bg-white border border-gray-300 rounded-xl px-4 py-2.5 text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500';
 
 function Section({ title, icon, children }) {
   return (
-    <div className="bg-white rounded-2xl shadow-lg p-6 space-y-4">
-      <h3 className="text-xs font-bold text-indigo-600 uppercase tracking-widest flex items-center gap-2">
+    <div className="rose-card space-y-4">
+      <h3 className="rose-section-title flex items-center gap-2">
         <span>{icon}</span>{title}
       </h3>
       {children}
@@ -24,7 +23,7 @@ function Section({ title, icon, children }) {
 function Field({ label, children }) {
   return (
     <div>
-      <label className="text-xs font-medium text-gray-500 block mb-1">{label}</label>
+      <label className="text-xs font-medium block mb-1" style={{ color: 'var(--rose-secondary)' }}>{label}</label>
       {children}
     </div>
   );
@@ -67,102 +66,99 @@ export default function Profile() {
   return (
     <div className="max-w-3xl mx-auto space-y-6">
 
-      {/* Header */}
-      <div className="bg-gradient-to-r from-indigo-600 to-purple-600 rounded-2xl p-6 flex items-center gap-5 shadow-lg">
+      {/* Header banner */}
+      <div className="rounded-2xl p-6 flex items-center gap-5"
+        style={{ background: 'linear-gradient(135deg, var(--rose-purple) 0%, var(--rose-secondary) 100%)' }}>
         <div className="relative flex-shrink-0">
-          <div className="p-1 rounded-full bg-white/30 shadow-lg">
-            <Avatar avatar={form.avatar} name={form.name} size="lg" className="ring-4 ring-white" />
+          <div className="p-1 rounded-full" style={{ background: 'rgba(255,255,255,0.25)' }}>
+            <Avatar avatar={form.avatar} name={form.name} size="lg" />
           </div>
           <button type="button" onClick={() => avatarRef.current.click()}
-            className="absolute bottom-0 right-0 w-8 h-8 bg-white rounded-full flex items-center justify-center shadow-lg hover:bg-gray-100 transition-colors border border-gray-200">
+            className="absolute bottom-0 right-0 w-8 h-8 bg-white rounded-full flex items-center justify-center shadow-lg hover:bg-gray-100 transition-colors border"
+            style={{ borderColor: 'var(--rose-border)' }}>
             <span className="text-sm">📷</span>
           </button>
           <input ref={avatarRef} type="file" accept="image/*" className="hidden" onChange={(e) => handleAvatar(e.target.files[0])} />
         </div>
         <div>
           <h1 className="text-xl font-bold text-white">{form.name || 'Your Name'}</h1>
-          {form.username && (
-            <p className="text-indigo-200 text-sm font-semibold">@{form.username}</p>
-          )}
-          <p className="text-white/60 text-xs mt-0.5">{form.email || 'your@email.com'}</p>
+          {form.username && <p className="text-sm font-semibold" style={{ color: 'rgba(255,255,255,0.75)' }}>@{form.username}</p>}
+          <p className="text-xs mt-0.5" style={{ color: 'rgba(255,255,255,0.55)' }}>{form.email || 'your@email.com'}</p>
           {form.jobTitle && (
-            <span className="mt-2 inline-block text-xs bg-white/20 text-white px-3 py-1 rounded-full border border-white/30">
+            <span className="mt-2 inline-block text-xs px-3 py-1 rounded-full"
+              style={{ background: 'rgba(255,255,255,0.2)', color: 'white', border: '1px solid rgba(255,255,255,0.3)' }}>
               {form.jobTitle}
             </span>
           )}
         </div>
       </div>
 
-      {/* Profile Picture */}
       <Section title="Profile Picture" icon="🖼️">
         <div onClick={() => avatarRef.current.click()}
-          className={`border-2 border-dashed rounded-xl p-4 flex items-center gap-4 cursor-pointer transition-all ${
-            form.avatar?.startsWith('data:') ? 'border-green-400 bg-green-50' : 'border-gray-200 hover:border-indigo-400 hover:bg-indigo-50'
-          }`}>
+          className="border-2 border-dashed rounded-xl p-4 flex items-center gap-4 cursor-pointer transition-all"
+          style={{
+            borderColor: form.avatar?.startsWith('data:') ? 'var(--rose-secondary)' : 'var(--rose-primary)',
+            background: form.avatar?.startsWith('data:') ? 'var(--rose-warm)' : 'transparent',
+          }}>
           <Avatar avatar={form.avatar} name={form.name} size="md" />
           <div className="flex-1">
             {form.avatar?.startsWith('data:')
-              ? <p className="text-sm font-semibold text-green-600">Photo uploaded ✓</p>
-              : <p className="text-sm font-medium text-gray-500">Click to upload your photo</p>}
-            <p className="text-xs text-gray-500/50 mt-0.5">JPG, PNG, GIF</p>
+              ? <p className="text-sm font-semibold" style={{ color: 'var(--rose-secondary)' }}>Photo uploaded ✓</p>
+              : <p className="text-sm font-medium" style={{ color: 'var(--rose-secondary)' }}>Click to upload your photo</p>}
+            <p className="text-xs mt-0.5" style={{ color: 'var(--rose-secondary)', opacity: 0.6 }}>JPG, PNG, GIF</p>
           </div>
           {form.avatar?.startsWith('data:') && (
             <button type="button" onClick={(e) => { e.stopPropagation(); set('avatar', ''); }}
-              className="text-xs text-red-400 hover:text-red-300 flex-shrink-0">
-              Remove
-            </button>
+              className="text-xs text-red-400 hover:text-red-500 flex-shrink-0">Remove</button>
           )}
           <input ref={avatarRef} type="file" accept="image/*" className="hidden"
             onChange={(e) => handleAvatar(e.target.files[0])} />
         </div>
       </Section>
 
-      {/* Personal Info */}
       <Section title="Personal Information" icon="👤">
         <Row>
-          <Field label="Full Name *"><input value={form.name} onChange={(e) => set('name', e.target.value)} placeholder="John Doe" className={inp} /></Field>
+          <Field label="Full Name *"><input value={form.name} onChange={(e) => set('name', e.target.value)} placeholder="John Doe" className="rose-input" /></Field>
           <Field label="Username">
             <div className="relative">
-              <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 text-sm">@</span>
-              <input value={form.username} onChange={(e) => set('username', e.target.value.toLowerCase().replace(/\s/g, '_'))} placeholder="john_doe" className={`${inp} pl-8`} />
+              <span className="absolute left-4 top-1/2 -translate-y-1/2 text-sm" style={{ color: 'var(--rose-secondary)' }}>@</span>
+              <input value={form.username} onChange={(e) => set('username', e.target.value.toLowerCase().replace(/\s/g, '_'))} placeholder="john_doe" className="rose-input" style={{ paddingLeft: '2rem' }} />
             </div>
           </Field>
         </Row>
         <Row>
-          <Field label="Email"><input value={form.email} onChange={(e) => set('email', e.target.value)} placeholder="you@example.com" type="email" className={inp} /></Field>
-          <Field label="Phone"><input value={form.phone} onChange={(e) => set('phone', e.target.value)} placeholder="+1 234 567 8900" className={inp} /></Field>
+          <Field label="Email"><input value={form.email} onChange={(e) => set('email', e.target.value)} placeholder="you@example.com" type="email" className="rose-input" /></Field>
+          <Field label="Phone"><input value={form.phone} onChange={(e) => set('phone', e.target.value)} placeholder="+1 234 567 8900" className="rose-input" /></Field>
         </Row>
         <Row>
-          <Field label="Location"><input value={form.location} onChange={(e) => set('location', e.target.value)} placeholder="City, Country" className={inp} /></Field>
+          <Field label="Location"><input value={form.location} onChange={(e) => set('location', e.target.value)} placeholder="City, Country" className="rose-input" /></Field>
         </Row>
-        <Field label="Bio"><textarea value={form.bio} onChange={(e) => set('bio', e.target.value)} placeholder="A short intro about yourself..." rows={3} className={`${inp} resize-none`} /></Field>
+        <Field label="Bio"><textarea value={form.bio} onChange={(e) => set('bio', e.target.value)} placeholder="A short intro about yourself..." rows={3} className="rose-input resize-none" /></Field>
       </Section>
 
-      {/* Education */}
       <Section title="Education" icon="🎓">
         <Row>
           <Field label="Degree">
-            <select value={form.degree} onChange={(e) => set('degree', e.target.value)} className={inp}>
+            <select value={form.degree} onChange={(e) => set('degree', e.target.value)} className="rose-input">
               <option value="">Select degree</option>
               {["High School","Diploma","Bachelor's","Master's","PhD","Other"].map((d) => <option key={d}>{d}</option>)}
             </select>
           </Field>
           <Field label="Graduation Year">
-            <select value={form.graduationYear} onChange={(e) => set('graduationYear', e.target.value)} className={inp}>
+            <select value={form.graduationYear} onChange={(e) => set('graduationYear', e.target.value)} className="rose-input">
               <option value="">Select year</option>
               {YEARS.map((y) => <option key={y}>{y}</option>)}
             </select>
           </Field>
         </Row>
-        <Field label="College / University"><input value={form.college} onChange={(e) => set('college', e.target.value)} placeholder="e.g. MIT, Stanford, IIT..." className={inp} /></Field>
+        <Field label="College / University"><input value={form.college} onChange={(e) => set('college', e.target.value)} placeholder="e.g. MIT, Stanford, IIT..." className="rose-input" /></Field>
       </Section>
 
-      {/* Career */}
       <Section title="Career" icon="💼">
         <Row>
-          <Field label="Desired Job Title"><input value={form.jobTitle} onChange={(e) => set('jobTitle', e.target.value)} placeholder="e.g. Data Scientist" className={inp} /></Field>
+          <Field label="Desired Job Title"><input value={form.jobTitle} onChange={(e) => set('jobTitle', e.target.value)} placeholder="e.g. Data Scientist" className="rose-input" /></Field>
           <Field label="Experience Level">
-            <select value={form.experience} onChange={(e) => set('experience', e.target.value)} className={inp}>
+            <select value={form.experience} onChange={(e) => set('experience', e.target.value)} className="rose-input">
               <option value="">Select level</option>
               {['Fresher','Intern','1-2 years','3-5 years','5+ years'].map((l) => <option key={l}>{l}</option>)}
             </select>
@@ -170,48 +166,42 @@ export default function Profile() {
         </Row>
       </Section>
 
-      {/* Interests */}
       <Section title="Interests" icon="🎯">
-        <p className="text-xs text-gray-500">Select all that apply — used for job matching</p>
+        <p className="text-xs" style={{ color: 'var(--rose-secondary)' }}>Select all that apply — used for job matching</p>
         <div className="flex flex-wrap gap-2">
           {INTEREST_OPTIONS.map((item) => (
             <button key={item} type="button" onClick={() => toggleInterest(item)}
-              className={`text-xs px-3 py-1.5 rounded-full border font-medium transition-colors ${
-                form.interests.includes(item)
-                  ? 'bg-indigo-600 text-white border-primary shadow-lg shadow-indigo-200'
-                  : 'bg-gray-50 text-gray-600 border-gray-200 hover:border-indigo-400 hover:text-indigo-600'
-              }`}>
+              className="text-xs px-3 py-1.5 rounded-full border font-medium transition-all"
+              style={form.interests.includes(item)
+                ? { background: 'var(--rose-purple)', color: 'white', borderColor: 'var(--rose-purple)' }
+                : { background: 'transparent', color: 'var(--rose-dark)', borderColor: 'var(--rose-border)' }}>
               {item}
             </button>
           ))}
         </div>
-        {form.interests.length > 0 && <p className="text-xs text-indigo-600">{form.interests.length} selected</p>}
+        {form.interests.length > 0 && <p className="text-xs" style={{ color: 'var(--rose-purple)' }}>{form.interests.length} selected</p>}
       </Section>
 
-      {/* Resume */}
       <Section title="Resume" icon="📄">
         <div onClick={() => resumeRef.current.click()}
-          className={`border-2 border-dashed rounded-xl p-6 text-center cursor-pointer transition-all ${
-            form.resumeName ? 'border-green-400 bg-green-50' : 'border-gray-200 hover:border-indigo-400 hover:bg-indigo-50'
-          }`}>
+          className="border-2 border-dashed rounded-xl p-6 text-center cursor-pointer transition-all"
+          style={{
+            borderColor: form.resumeName ? 'var(--rose-secondary)' : 'var(--rose-primary)',
+            background: form.resumeName ? 'var(--rose-warm)' : 'transparent',
+          }}>
           <p className="text-4xl mb-2">{form.resumeName ? '✅' : '📁'}</p>
           {form.resumeName
-            ? <p className="text-sm font-semibold text-green-600">{form.resumeName}</p>
-            : <p className="text-sm text-gray-500">Click to upload your resume (PDF only)</p>}
+            ? <p className="text-sm font-semibold" style={{ color: 'var(--rose-secondary)' }}>{form.resumeName}</p>
+            : <p className="text-sm" style={{ color: 'var(--rose-secondary)' }}>Click to upload your resume (PDF only)</p>}
           <input ref={resumeRef} type="file" accept=".pdf" className="hidden" onChange={(e) => handleResume(e.target.files[0])} />
         </div>
       </Section>
 
-      {/* Actions */}
       <div className="flex gap-3 pb-6">
-        <button onClick={() => navigate(-1)}
-          className="flex-1 py-3 rounded-xl border border-gray-200 text-sm font-semibold text-gray-500 hover:bg-white/5 transition-colors">
-          ← Back
-        </button>
+        <button onClick={() => navigate(-1)} className="btn-secondary flex-1 py-3">← Back</button>
         <button onClick={handleSave}
-          className={`flex-1 py-3 rounded-xl text-sm font-semibold transition-all shadow-lg ${
-            saved ? 'bg-green-500 text-white shadow-green-200' : 'bg-indigo-600 text-white hover:bg-indigo-700 shadow-indigo-200'
-          }`}>
+          className="flex-1 py-3 rounded-xl text-sm font-semibold transition-all"
+          style={{ background: saved ? '#22c55e' : 'var(--rose-purple)', color: 'white' }}>
           {saved ? '✓ Profile Saved!' : 'Save Profile'}
         </button>
       </div>

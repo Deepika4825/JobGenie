@@ -2,11 +2,10 @@ import { useState, useRef } from 'react';
 
 const API = import.meta.env.VITE_API_URL || 'http://localhost:8000';
 
-// ── Empty state factories ────────────────────────────────────────────────────
-const emptyEducation   = () => ({ degree:'', college:'', location:'', startYear:'', endYear:'', cgpa:'' });
-const emptyProject     = () => ({ name:'', technologies:'', description:'', link:'' });
-const emptyExperience  = () => ({ company:'', role:'', duration:'', description:'' });
-const emptyCert        = () => ({ name:'', organization:'', year:'' });
+const emptyEducation  = () => ({ degree:'', college:'', location:'', startYear:'', endYear:'', cgpa:'' });
+const emptyProject    = () => ({ name:'', technologies:'', description:'', link:'' });
+const emptyExperience = () => ({ company:'', role:'', duration:'', description:'' });
+const emptyCert       = () => ({ name:'', organization:'', year:'' });
 
 const initialForm = () => ({
   personal: { fullName:'', phone:'', email:'', linkedin:'', github:'', leetcode:'', codechef:'', medium:'', location:'' },
@@ -20,42 +19,39 @@ const initialForm = () => ({
   coursework: '',
 });
 
-// ── Reusable input components ────────────────────────────────────────────────
 const Field = ({ label, required, ...props }) => (
   <div className="flex flex-col gap-1">
-    <label className="text-xs font-semibold text-gray-600">
+    <label className="text-xs font-semibold" style={{ color: 'var(--rose-secondary)' }}>
       {label}{required && <span className="text-red-500 ml-0.5">*</span>}
     </label>
-    <input
-      {...props}
-      className="border border-gray-300 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400 bg-white"
-    />
+    <input {...props} className="rose-input" />
   </div>
 );
 
 const TextArea = ({ label, required, ...props }) => (
   <div className="flex flex-col gap-1">
-    <label className="text-xs font-semibold text-gray-600">
+    <label className="text-xs font-semibold" style={{ color: 'var(--rose-secondary)' }}>
       {label}{required && <span className="text-red-500 ml-0.5">*</span>}
     </label>
-    <textarea
-      rows={3}
-      {...props}
-      className="border border-gray-300 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400 bg-white resize-y"
-    />
+    <textarea rows={3} {...props} className="rose-input resize-y" />
   </div>
 );
 
 const SectionCard = ({ title, icon, children }) => (
-  <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 space-y-4">
-    <h2 className="text-sm font-bold text-gray-800 flex items-center gap-2">
-      <span>{icon}</span>{title}
+  <div className="rose-card space-y-4">
+    <h2 className="text-sm font-bold flex items-center gap-2" style={{ color: 'var(--rose-dark)' }}>
+      <span style={{ color: 'var(--rose-purple)' }}>{icon}</span>{title}
     </h2>
     {children}
   </div>
 );
 
-// ── Main component ────────────────────────────────────────────────────────────
+const AddBtn = ({ onClick, label }) => (
+  <button onClick={onClick} className="text-sm font-semibold hover:underline" style={{ color: 'var(--rose-purple)' }}>
+    + {label}
+  </button>
+);
+
 export default function ResumeGenerator() {
   const [form, setForm]       = useState(initialForm());
   const [loading, setLoading] = useState(false);
@@ -64,46 +60,29 @@ export default function ResumeGenerator() {
   const [success, setSuccess] = useState(false);
   const pdfRef = useRef(null);
 
-  // ── Field updaters ──────────────────────────────────────────────────────
-  const setPersonal  = (k, v) => setForm(f => ({ ...f, personal: { ...f.personal, [k]: v } }));
-  const setSkills    = (k, v) => setForm(f => ({ ...f, skills:   { ...f.skills,   [k]: v } }));
+  const setPersonal = (k, v) => setForm(f => ({ ...f, personal: { ...f.personal, [k]: v } }));
+  const setSkills   = (k, v) => setForm(f => ({ ...f, skills:   { ...f.skills,   [k]: v } }));
 
   const updateList = (key, i, field, value) =>
-    setForm(f => {
-      const arr = [...f[key]];
-      arr[i] = { ...arr[i], [field]: value };
-      return { ...f, [key]: arr };
-    });
+    setForm(f => { const arr = [...f[key]]; arr[i] = { ...arr[i], [field]: value }; return { ...f, [key]: arr }; });
 
   const addItem    = (key, empty) => setForm(f => ({ ...f, [key]: [...f[key], empty()] }));
   const removeItem = (key, i)     => setForm(f => ({ ...f, [key]: f[key].filter((_, idx) => idx !== i) }));
 
-  const updateAchievement = (i, v) =>
-    setForm(f => {
-      const arr = [...f.achievements];
-      arr[i] = v;
-      return { ...f, achievements: arr };
-    });
-
-  // ── Validation ──────────────────────────────────────────────────────────
   const validate = () => {
     if (!form.personal.fullName.trim()) return 'Full name is required.';
     if (!form.personal.email.trim())    return 'Email is required.';
     if (!form.personal.phone.trim())    return 'Phone number is required.';
-    const hasEdu = form.education.some(e => e.degree.trim() || e.college.trim());
-    if (!hasEdu) return 'At least one education entry is required.';
+    if (!form.education.some(e => e.degree.trim() || e.college.trim())) return 'At least one education entry is required.';
     return '';
   };
 
-  // ── Generate ────────────────────────────────────────────────────────────
   const handleGenerate = async () => {
     setError('');
-    const validationError = validate();
-    if (validationError) { setError(validationError); return; }
-
+    const err = validate();
+    if (err) { setError(err); return; }
     setLoading(true);
     try {
-      // Clean empty entries
       const payload = {
         ...form,
         education:      form.education.filter(e => e.degree.trim() || e.college.trim()),
@@ -112,37 +91,19 @@ export default function ResumeGenerator() {
         certifications: form.certifications.filter(c => c.name.trim()),
         achievements:   form.achievements.filter(a => a.trim()),
       };
-
       const res = await fetch(`${API}/generate-resume`, {
-        method:  'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body:    JSON.stringify(payload),
+        method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload),
       });
-
-      if (!res.ok) {
-        const err = await res.json().catch(() => ({}));
-        throw new Error(err.error || 'Failed to generate resume');
-      }
-
+      if (!res.ok) { const e = await res.json().catch(() => ({})); throw new Error(e.error || 'Failed to generate resume'); }
       const blob = await res.blob();
       const url  = URL.createObjectURL(blob);
-      setPdfUrl(url);
-      setSuccess(true);
+      setPdfUrl(url); setSuccess(true);
       setTimeout(() => pdfRef.current?.scrollIntoView({ behavior: 'smooth' }), 100);
-    } catch (e) {
-      setError(e.message || 'Something went wrong.');
-    } finally {
-      setLoading(false);
-    }
+    } catch (e) { setError(e.message || 'Something went wrong.'); }
+    finally { setLoading(false); }
   };
 
-  const handleReset = () => {
-    setForm(initialForm());
-    setPdfUrl('');
-    setSuccess(false);
-    setError('');
-  };
-
+  const handleReset = () => { setForm(initialForm()); setPdfUrl(''); setSuccess(false); setError(''); };
   const handleDownload = () => {
     if (!pdfUrl) return;
     const a = document.createElement('a');
@@ -151,19 +112,20 @@ export default function ResumeGenerator() {
     a.click();
   };
 
-  // ── Render ──────────────────────────────────────────────────────────────
+  const subCardStyle = { border: '1px solid var(--rose-border)', borderRadius: '0.75rem', padding: '1rem', position: 'relative' };
+
   return (
     <div className="max-w-4xl mx-auto space-y-6 pb-10">
 
-      {/* Header */}
-      <div className="bg-gradient-to-r from-indigo-600 to-purple-600 rounded-2xl p-6 text-white">
+      <div className="rounded-2xl p-6 text-white"
+        style={{ background: 'linear-gradient(135deg, var(--rose-purple) 0%, var(--rose-secondary) 100%)' }}>
         <h1 className="text-2xl font-bold mb-1">📄 Fresher Resume Generator</h1>
-        <p className="text-indigo-100 text-sm">
+        <p className="text-sm" style={{ color: 'rgba(255,255,255,0.8)' }}>
           Fill in your details below. We'll generate a professional, ATS-friendly PDF resume for you.
         </p>
       </div>
 
-      {/* ── Personal Information ─────────────────────────────────────────── */}
+      {/* Personal Information */}
       <SectionCard title="Personal Information" icon="👤">
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <Field label="Full Name"     required value={form.personal.fullName}  onChange={e => setPersonal('fullName',  e.target.value)} placeholder="Deepika R" />
@@ -178,44 +140,35 @@ export default function ResumeGenerator() {
         </div>
       </SectionCard>
 
-      {/* ── Professional Summary ─────────────────────────────────────────── */}
+      {/* Summary */}
       <SectionCard title="Professional Summary" icon="📝">
-        <TextArea
-          label="Career Objective / Professional Summary"
-          value={form.summary}
-          onChange={e => setForm(f => ({ ...f, summary: e.target.value }))}
-          placeholder="A motivated Computer Science graduate with expertise in full-stack development..."
-          rows={4}
-        />
+        <TextArea label="Career Objective / Professional Summary" value={form.summary}
+          onChange={e => setForm(f => ({ ...f, summary: e.target.value }))} rows={4}
+          placeholder="A motivated Computer Science graduate with expertise in full-stack development..." />
       </SectionCard>
 
-      {/* ── Education ────────────────────────────────────────────────────── */}
+      {/* Education */}
       <SectionCard title="Education" icon="🎓">
         {form.education.map((edu, i) => (
-          <div key={i} className="border border-gray-200 rounded-xl p-4 space-y-3 relative">
+          <div key={i} style={subCardStyle}>
             {form.education.length > 1 && (
               <button onClick={() => removeItem('education', i)}
-                className="absolute top-3 right-3 text-red-400 hover:text-red-600 text-xs font-semibold">
-                ✕ Remove
-              </button>
+                className="absolute top-3 right-3 text-xs font-semibold text-red-400 hover:text-red-600">✕ Remove</button>
             )}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              <Field label="Degree / Course" required value={edu.degree}   onChange={e => updateList('education', i, 'degree',    e.target.value)} placeholder="B.Tech Computer Science" />
-              <Field label="College / University"      value={edu.college}  onChange={e => updateList('education', i, 'college',   e.target.value)} placeholder="XYZ University" />
-              <Field label="Location"                  value={edu.location} onChange={e => updateList('education', i, 'location',  e.target.value)} placeholder="Bangalore" />
-              <Field label="CGPA / Percentage"         value={edu.cgpa}     onChange={e => updateList('education', i, 'cgpa',      e.target.value)} placeholder="8.5 / 85%" />
-              <Field label="Start Year"                value={edu.startYear}onChange={e => updateList('education', i, 'startYear', e.target.value)} placeholder="2020" />
-              <Field label="End Year"                  value={edu.endYear}  onChange={e => updateList('education', i, 'endYear',   e.target.value)} placeholder="2024" />
+              <Field label="Degree / Course" required value={edu.degree}    onChange={e => updateList('education', i, 'degree',    e.target.value)} placeholder="B.Tech Computer Science" />
+              <Field label="College / University"      value={edu.college}   onChange={e => updateList('education', i, 'college',   e.target.value)} placeholder="XYZ University" />
+              <Field label="Location"                  value={edu.location}  onChange={e => updateList('education', i, 'location',  e.target.value)} placeholder="Bangalore" />
+              <Field label="CGPA / Percentage"         value={edu.cgpa}      onChange={e => updateList('education', i, 'cgpa',      e.target.value)} placeholder="8.5 / 85%" />
+              <Field label="Start Year"                value={edu.startYear} onChange={e => updateList('education', i, 'startYear', e.target.value)} placeholder="2020" />
+              <Field label="End Year"                  value={edu.endYear}   onChange={e => updateList('education', i, 'endYear',   e.target.value)} placeholder="2024" />
             </div>
           </div>
         ))}
-        <button onClick={() => addItem('education', emptyEducation)}
-          className="text-sm text-indigo-600 font-semibold hover:underline">
-          + Add Education
-        </button>
+        <AddBtn onClick={() => addItem('education', emptyEducation)} label="Add Education" />
       </SectionCard>
 
-      {/* ── Skills ────────────────────────────────────────────────────────── */}
+      {/* Skills */}
       <SectionCard title="Skills" icon="⚡">
         <div className="space-y-3">
           <Field label="Programming Languages" value={form.skills.programmingLanguages} onChange={e => setSkills('programmingLanguages', e.target.value)} placeholder="Python, Java, JavaScript, C++" />
@@ -224,124 +177,88 @@ export default function ResumeGenerator() {
         </div>
       </SectionCard>
 
-      {/* ── Projects ──────────────────────────────────────────────────────── */}
+      {/* Projects */}
       <SectionCard title="Projects" icon="🛠️">
         {form.projects.map((proj, i) => (
-          <div key={i} className="border border-gray-200 rounded-xl p-4 space-y-3 relative">
+          <div key={i} style={subCardStyle}>
             {form.projects.length > 1 && (
               <button onClick={() => removeItem('projects', i)}
-                className="absolute top-3 right-3 text-red-400 hover:text-red-600 text-xs font-semibold">
-                ✕ Remove
-              </button>
+                className="absolute top-3 right-3 text-xs font-semibold text-red-400 hover:text-red-600">✕ Remove</button>
             )}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              <Field label="Project Name"        value={proj.name}         onChange={e => updateList('projects', i, 'name',         e.target.value)} placeholder="JobGenie AI" />
-              <Field label="Technologies Used"   value={proj.technologies} onChange={e => updateList('projects', i, 'technologies', e.target.value)} placeholder="React, Flask, Python, SQLite" />
-              <Field label="Project Link (optional)" value={proj.link}     onChange={e => updateList('projects', i, 'link',         e.target.value)} placeholder="https://github.com/..." />
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-3">
+              <Field label="Project Name"            value={proj.name}         onChange={e => updateList('projects', i, 'name',         e.target.value)} placeholder="JobGenie AI" />
+              <Field label="Technologies Used"       value={proj.technologies} onChange={e => updateList('projects', i, 'technologies', e.target.value)} placeholder="React, Flask, Python, SQLite" />
+              <Field label="Project Link (optional)" value={proj.link}         onChange={e => updateList('projects', i, 'link',         e.target.value)} placeholder="https://github.com/..." />
             </div>
             <TextArea label="Project Description" value={proj.description} onChange={e => updateList('projects', i, 'description', e.target.value)} placeholder="Describe what the project does, your role, and impact..." rows={3} />
           </div>
         ))}
-        <button onClick={() => addItem('projects', emptyProject)}
-          className="text-sm text-indigo-600 font-semibold hover:underline">
-          + Add Project
-        </button>
+        <AddBtn onClick={() => addItem('projects', emptyProject)} label="Add Project" />
       </SectionCard>
 
-      {/* ── Experience (optional) ─────────────────────────────────────────── */}
+      {/* Experience */}
       <SectionCard title="Internship / Experience" icon="💼">
-        <p className="text-xs text-gray-500 -mt-2">Optional — leave empty if you have no experience yet.</p>
+        <p className="text-xs -mt-2" style={{ color: 'var(--rose-secondary)' }}>Optional — leave empty if you have no experience yet.</p>
         {form.experience.map((exp, i) => (
-          <div key={i} className="border border-gray-200 rounded-xl p-4 space-y-3 relative">
+          <div key={i} style={subCardStyle}>
             <button onClick={() => removeItem('experience', i)}
-              className="absolute top-3 right-3 text-red-400 hover:text-red-600 text-xs font-semibold">
-              ✕ Remove
-            </button>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              className="absolute top-3 right-3 text-xs font-semibold text-red-400 hover:text-red-600">✕ Remove</button>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-3">
               <Field label="Company Name" value={exp.company}  onChange={e => updateList('experience', i, 'company',  e.target.value)} placeholder="ABC Technologies" />
               <Field label="Role"         value={exp.role}     onChange={e => updateList('experience', i, 'role',     e.target.value)} placeholder="Frontend Intern" />
               <Field label="Duration"     value={exp.duration} onChange={e => updateList('experience', i, 'duration', e.target.value)} placeholder="Jun 2023 – Aug 2023" />
             </div>
-            <TextArea label="Description" value={exp.description} onChange={e => updateList('experience', i, 'description', e.target.value)} placeholder="Describe your responsibilities and achievements..." rows={3} />
+            <TextArea label="Description" value={exp.description} onChange={e => updateList('experience', i, 'description', e.target.value)} placeholder="Describe your responsibilities..." rows={3} />
           </div>
         ))}
-        <button onClick={() => addItem('experience', emptyExperience)}
-          className="text-sm text-indigo-600 font-semibold hover:underline">
-          + Add Experience
-        </button>
+        <AddBtn onClick={() => addItem('experience', emptyExperience)} label="Add Experience" />
       </SectionCard>
 
-      {/* ── Certifications ────────────────────────────────────────────────── */}
+      {/* Certifications */}
       <SectionCard title="Certifications" icon="🏆">
         {form.certifications.map((cert, i) => (
-          <div key={i} className="flex flex-wrap gap-3 items-end border border-gray-200 rounded-xl p-4 relative">
+          <div key={i} className="flex flex-wrap gap-3 items-end" style={{ ...subCardStyle }}>
             {form.certifications.length > 1 && (
               <button onClick={() => removeItem('certifications', i)}
-                className="absolute top-3 right-3 text-red-400 hover:text-red-600 text-xs font-semibold">
-                ✕
-              </button>
+                className="absolute top-3 right-3 text-xs font-semibold text-red-400 hover:text-red-600">✕</button>
             )}
-            <div className="flex-1 min-w-[150px]">
-              <Field label="Certification Name"     value={cert.name}         onChange={e => updateList('certifications', i, 'name',         e.target.value)} placeholder="AWS Cloud Practitioner" />
-            </div>
-            <div className="flex-1 min-w-[150px]">
-              <Field label="Issuing Organization"   value={cert.organization} onChange={e => updateList('certifications', i, 'organization', e.target.value)} placeholder="Amazon Web Services" />
-            </div>
-            <div className="w-24">
-              <Field label="Year" value={cert.year} onChange={e => updateList('certifications', i, 'year', e.target.value)} placeholder="2023" />
-            </div>
+            <div className="flex-1 min-w-[150px]"><Field label="Certification Name"   value={cert.name}         onChange={e => updateList('certifications', i, 'name',         e.target.value)} placeholder="AWS Cloud Practitioner" /></div>
+            <div className="flex-1 min-w-[150px]"><Field label="Issuing Organization" value={cert.organization} onChange={e => updateList('certifications', i, 'organization', e.target.value)} placeholder="Amazon Web Services" /></div>
+            <div className="w-24">                <Field label="Year"                 value={cert.year}         onChange={e => updateList('certifications', i, 'year',         e.target.value)} placeholder="2023" /></div>
           </div>
         ))}
-        <button onClick={() => addItem('certifications', emptyCert)}
-          className="text-sm text-indigo-600 font-semibold hover:underline">
-          + Add Certification
-        </button>
+        <AddBtn onClick={() => addItem('certifications', emptyCert)} label="Add Certification" />
       </SectionCard>
 
-      {/* ── Achievements ──────────────────────────────────────────────────── */}
+      {/* Achievements */}
       <SectionCard title="Achievements" icon="🌟">
         {form.achievements.map((ach, i) => (
           <div key={i} className="flex gap-2 items-center">
-            <input
-              value={ach}
-              onChange={e => updateAchievement(i, e.target.value)}
-              placeholder="Won 1st place in National Hackathon 2023"
-              className="flex-1 border border-gray-300 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400"
-            />
+            <input value={ach} onChange={e => { const arr=[...form.achievements]; arr[i]=e.target.value; setForm(f=>({...f,achievements:arr})); }}
+              placeholder="Won 1st place in National Hackathon 2023" className="rose-input flex-1" />
             {form.achievements.length > 1 && (
               <button onClick={() => setForm(f => ({ ...f, achievements: f.achievements.filter((_, idx) => idx !== i) }))}
                 className="text-red-400 hover:text-red-600 text-lg font-bold">✕</button>
             )}
           </div>
         ))}
-        <button onClick={() => setForm(f => ({ ...f, achievements: [...f.achievements, ''] }))}
-          className="text-sm text-indigo-600 font-semibold hover:underline">
-          + Add Achievement
-        </button>
+        <AddBtn onClick={() => setForm(f => ({ ...f, achievements: [...f.achievements, ''] }))} label="Add Achievement" />
       </SectionCard>
 
-      {/* ── Coursework ────────────────────────────────────────────────────── */}
+      {/* Coursework */}
       <SectionCard title="Relevant Coursework" icon="📚">
-        <p className="text-xs text-gray-500 -mt-2">Optional</p>
-        <Field
-          label="Courses (comma separated)"
-          value={form.coursework}
+        <p className="text-xs -mt-2" style={{ color: 'var(--rose-secondary)' }}>Optional</p>
+        <Field label="Courses (comma separated)" value={form.coursework}
           onChange={e => setForm(f => ({ ...f, coursework: e.target.value }))}
-          placeholder="Data Structures, Algorithms, Operating Systems, DBMS, Machine Learning"
-        />
+          placeholder="Data Structures, Algorithms, Operating Systems, DBMS, Machine Learning" />
       </SectionCard>
 
-      {/* ── Error ─────────────────────────────────────────────────────────── */}
       {error && (
-        <div className="bg-red-50 border border-red-200 rounded-2xl p-4 text-red-600 text-sm">
-          ⚠️ {error}
-        </div>
+        <div className="bg-red-50 border border-red-200 rounded-2xl p-4 text-red-600 text-sm">⚠️ {error}</div>
       )}
 
-      {/* ── Action Buttons ────────────────────────────────────────────────── */}
       <div className="flex flex-wrap gap-3">
-        <button onClick={handleGenerate} disabled={loading}
-          className="flex-1 sm:flex-none bg-indigo-600 text-white px-8 py-3 rounded-xl font-semibold hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg transition-all flex items-center justify-center gap-2">
+        <button onClick={handleGenerate} disabled={loading} className="btn-primary flex-1 sm:flex-none px-8 py-3 flex items-center justify-center gap-2">
           {loading ? (
             <><svg className="animate-spin h-4 w-4" fill="none" viewBox="0 0 24 24">
               <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/>
@@ -349,41 +266,29 @@ export default function ResumeGenerator() {
             </svg> Generating...</>
           ) : '🚀 Generate Resume'}
         </button>
-        <button onClick={handleReset}
-          className="px-6 py-3 rounded-xl font-semibold border border-gray-300 text-gray-600 hover:bg-gray-50 transition-all">
-          🔄 Reset
-        </button>
+        <button onClick={handleReset} className="btn-secondary px-6 py-3">🔄 Reset</button>
       </div>
 
-      {/* ── Success + PDF Preview ─────────────────────────────────────────── */}
       {success && pdfUrl && (
         <div ref={pdfRef} className="space-y-4">
-          <div className="bg-green-50 border border-green-200 rounded-2xl p-4 flex items-center gap-3">
+          <div className="rounded-2xl p-4 flex items-center gap-3"
+            style={{ background: 'var(--rose-light)', border: '1px solid var(--rose-primary)' }}>
             <span className="text-2xl">✅</span>
             <div>
-              <p className="text-sm font-semibold text-green-700">Your fresher resume has been generated successfully!</p>
-              <p className="text-xs text-gray-500 mt-0.5">Preview it below or download it to your device.</p>
+              <p className="text-sm font-semibold" style={{ color: 'var(--rose-purple)' }}>Your resume has been generated successfully!</p>
+              <p className="text-xs mt-0.5" style={{ color: 'var(--rose-secondary)' }}>Preview it below or download it to your device.</p>
             </div>
-            <button onClick={handleDownload}
-              className="ml-auto flex-shrink-0 bg-green-600 text-white text-sm font-semibold px-5 py-2 rounded-xl hover:bg-green-700 transition-colors whitespace-nowrap">
+            <button onClick={handleDownload} className="btn-primary ml-auto flex-shrink-0 text-sm px-5 py-2 whitespace-nowrap">
               ⬇️ Download PDF
             </button>
           </div>
 
-          <div className="bg-white rounded-2xl shadow-lg overflow-hidden border border-gray-200">
-            <div className="bg-gray-50 border-b border-gray-200 px-4 py-3 flex items-center justify-between">
-              <span className="text-sm font-semibold text-gray-700">📄 Resume Preview</span>
-              <button onClick={handleDownload}
-                className="text-xs text-indigo-600 font-semibold hover:underline">
-                Download
-              </button>
+          <div className="rose-card overflow-hidden p-0">
+            <div className="px-4 py-3 flex items-center justify-between" style={{ background: 'var(--rose-warm)', borderBottom: '1px solid var(--rose-border)' }}>
+              <span className="text-sm font-semibold" style={{ color: 'var(--rose-dark)' }}>📄 Resume Preview</span>
+              <button onClick={handleDownload} className="text-xs font-semibold hover:underline" style={{ color: 'var(--rose-purple)' }}>Download</button>
             </div>
-            <iframe
-              src={pdfUrl}
-              title="Resume Preview"
-              className="w-full"
-              style={{ height: '80vh' }}
-            />
+            <iframe src={pdfUrl} title="Resume Preview" className="w-full" style={{ height: '80vh' }} />
           </div>
         </div>
       )}
