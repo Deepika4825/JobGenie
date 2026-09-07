@@ -11,98 +11,75 @@ from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.lib.units import inch
 from reportlab.lib import colors
 from reportlab.platypus import (
-    SimpleDocTemplate, Paragraph, Spacer, HRFlowable, Table, TableStyle
+    SimpleDocTemplate, Paragraph, Spacer, HRFlowable
 )
-from reportlab.lib.enums import TA_LEFT, TA_CENTER, TA_RIGHT
+from reportlab.lib.enums import TA_LEFT, TA_CENTER
 
 
-# ─── LaTeX-style escape (kept for forward compatibility) ────────────────────
-_LATEX_SPECIAL = re.compile(r'([%&$#_{}~^\\])')
-
-def escape_latex(text: str) -> str:
-    """Escape special LaTeX characters (for future LaTeX backend)."""
-    if not text:
-        return ""
-    replacements = {
-        '\\': r'\textbackslash{}',
-        '&':  r'\&',
-        '%':  r'\%',
-        '$':  r'\$',
-        '#':  r'\#',
-        '_':  r'\_',
-        '{':  r'\{',
-        '}':  r'\}',
-        '~':  r'\textasciitilde{}',
-        '^':  r'\textasciicircum{}',
-    }
-    result = []
-    for ch in text:
-        result.append(replacements.get(ch, ch))
-    return ''.join(result)
+# ─── All black color palette ─────────────────────────────────────────────────
+BLACK    = colors.HexColor('#000000')
+DARK     = colors.HexColor('#1a1a1a')
+GRAY     = colors.HexColor('#444444')
+LIGHT    = colors.HexColor('#666666')
+DIVIDER  = colors.HexColor('#cccccc')
 
 
 def sanitize(text: str) -> str:
-    """Sanitize text for PDF output — strip leading/trailing whitespace."""
     if not text:
         return ""
     return str(text).strip()
 
 
-# ─── Color palette ──────────────────────────────────────────────────────────
-PRIMARY   = colors.HexColor('#1a1a2e')   # deep navy
-ACCENT    = colors.HexColor('#2563eb')   # blue
-LIGHT     = colors.HexColor('#64748b')   # slate
-DIVIDER   = colors.HexColor('#e2e8f0')   # light gray
-WHITE     = colors.white
-
-
-# ─── Style factory ──────────────────────────────────────────────────────────
+# ─── Style factory ────────────────────────────────────────────────────────────
 def _build_styles():
-    base = getSampleStyleSheet()
-
     name_style = ParagraphStyle(
         'NameStyle',
         fontName='Helvetica-Bold',
-        fontSize=22,
-        textColor=PRIMARY,
+        fontSize=20,
+        textColor=BLACK,
         alignment=TA_CENTER,
-        spaceAfter=4,
+        spaceAfter=6,
+        leading=24,
     )
     contact_style = ParagraphStyle(
         'ContactStyle',
         fontName='Helvetica',
         fontSize=9,
-        textColor=LIGHT,
+        textColor=GRAY,
         alignment=TA_CENTER,
-        spaceAfter=2,
+        spaceAfter=3,
+        leading=13,
     )
     section_heading = ParagraphStyle(
         'SectionHeading',
         fontName='Helvetica-Bold',
-        fontSize=11,
-        textColor=ACCENT,
-        spaceBefore=10,
+        fontSize=10.5,
+        textColor=BLACK,
+        spaceBefore=8,
         spaceAfter=3,
+        leading=14,
     )
     entry_title = ParagraphStyle(
         'EntryTitle',
         fontName='Helvetica-Bold',
         fontSize=10,
-        textColor=PRIMARY,
+        textColor=BLACK,
         spaceAfter=1,
+        leading=14,
     )
     entry_subtitle = ParagraphStyle(
         'EntrySubtitle',
         fontName='Helvetica-Oblique',
         fontSize=9,
-        textColor=LIGHT,
+        textColor=GRAY,
         spaceAfter=2,
+        leading=13,
     )
     body_style = ParagraphStyle(
         'BodyStyle',
         fontName='Helvetica',
         fontSize=9.5,
-        textColor=PRIMARY,
+        textColor=DARK,
         leading=14,
         spaceAfter=2,
     )
@@ -110,34 +87,25 @@ def _build_styles():
         'BulletStyle',
         fontName='Helvetica',
         fontSize=9.5,
-        textColor=PRIMARY,
+        textColor=DARK,
         leading=13,
-        leftIndent=12,
-        bulletIndent=0,
+        leftIndent=14,
         spaceAfter=1,
     )
-    skills_label = ParagraphStyle(
-        'SkillsLabel',
-        fontName='Helvetica-Bold',
-        fontSize=9.5,
-        textColor=PRIMARY,
-        spaceAfter=2,
-    )
     return {
-        'name': name_style,
-        'contact': contact_style,
-        'section': section_heading,
-        'entry_title': entry_title,
+        'name':     name_style,
+        'contact':  contact_style,
+        'section':  section_heading,
+        'entry_title':    entry_title,
         'entry_subtitle': entry_subtitle,
-        'body': body_style,
-        'bullet': bullet_style,
-        'skills_label': skills_label,
+        'body':     body_style,
+        'bullet':   bullet_style,
     }
 
 
-# ─── Section helpers ────────────────────────────────────────────────────────
 def _divider():
-    return HRFlowable(width='100%', thickness=0.5, color=DIVIDER, spaceAfter=4)
+    return HRFlowable(width='100%', thickness=0.5, color=DIVIDER,
+                      spaceBefore=2, spaceAfter=4)
 
 
 def _section_header(title: str, styles: dict):
@@ -147,23 +115,15 @@ def _section_header(title: str, styles: dict):
     ]
 
 
-def _bullet_points(items: list, styles: dict):
-    """Convert a list of strings to bullet paragraphs."""
-    result = []
-    for item in items:
-        item = sanitize(item)
-        if item:
-            result.append(Paragraph(f"• {item}", styles['bullet']))
-    return result
+def _bullet_item(text: str, styles: dict):
+    text = sanitize(text)
+    if not text:
+        return None
+    return Paragraph(f"\u2022  {text}", styles['bullet'])
 
 
-# ─── Main builder functions ──────────────────────────────────────────────────
-
+# ─── Main builder ─────────────────────────────────────────────────────────────
 def build_resume(data: dict) -> bytes:
-    """
-    Build a PDF resume from structured data.
-    Returns raw PDF bytes.
-    """
     buffer = io.BytesIO()
     styles = _build_styles()
 
@@ -184,7 +144,7 @@ def build_resume(data: dict) -> bytes:
     if name:
         story.append(Paragraph(name, styles['name']))
 
-    # Contact line
+    # Contact line: phone | email | location
     contact_parts = []
     if personal.get('phone'):
         contact_parts.append(sanitize(personal['phone']))
@@ -193,27 +153,27 @@ def build_resume(data: dict) -> bytes:
     if personal.get('location'):
         contact_parts.append(sanitize(personal['location']))
     if contact_parts:
-        story.append(Paragraph(' | '.join(contact_parts), styles['contact']))
+        story.append(Paragraph('  |  '.join(contact_parts), styles['contact']))
 
-    # Links line
+    # Links line: LinkedIn | GitHub | LeetCode | CodeChef | Medium
     link_parts = []
-    if personal.get('linkedin'):
-        link_parts.append(sanitize(personal['linkedin']))
-    if personal.get('github'):
-        link_parts.append(sanitize(personal['github']))
+    for key in ['linkedin', 'github', 'leetcode', 'codechef', 'medium']:
+        val = sanitize(personal.get(key, ''))
+        if val:
+            link_parts.append(val)
     if link_parts:
-        story.append(Paragraph(' | '.join(link_parts), styles['contact']))
+        story.append(Paragraph('  |  '.join(link_parts), styles['contact']))
 
-    story.append(Spacer(1, 6))
+    story.append(Spacer(1, 8))
 
-    # ── Professional Summary ─────────────────────────────────────────────────
+    # ── Professional Summary ──────────────────────────────────────────────────
     summary = sanitize(data.get('summary', ''))
     if summary:
         story += _section_header('Professional Summary', styles)
         story.append(Paragraph(summary, styles['body']))
         story.append(Spacer(1, 4))
 
-    # ── Education ────────────────────────────────────────────────────────────
+    # ── Education ─────────────────────────────────────────────────────────────
     education = [e for e in data.get('education', []) if e.get('degree') or e.get('college')]
     if education:
         story += _section_header('Education', styles)
@@ -225,11 +185,11 @@ def build_resume(data: dict) -> bytes:
             end      = sanitize(edu.get('endYear', ''))
             cgpa     = sanitize(edu.get('cgpa', ''))
 
-            duration = f"{start} – {end}" if start or end else ''
-            subtitle_parts = [p for p in [college, location] if p]
-            subtitle = ' | '.join(subtitle_parts)
+            duration = f"{start} \u2013 {end}" if start or end else ''
+            sub_parts = [p for p in [college, location] if p]
+            subtitle = ' | '.join(sub_parts)
             if duration:
-                subtitle += f"  ({duration})" if subtitle else duration
+                subtitle += f" ({duration})" if subtitle else duration
 
             if degree:
                 story.append(Paragraph(degree, styles['entry_title']))
@@ -239,51 +199,49 @@ def build_resume(data: dict) -> bytes:
                 story.append(Paragraph(f"CGPA / Percentage: {cgpa}", styles['body']))
             story.append(Spacer(1, 3))
 
-    # ── Skills ───────────────────────────────────────────────────────────────
+    # ── Skills ────────────────────────────────────────────────────────────────
     skills = data.get('skills', {})
-    prog_langs = sanitize(skills.get('programmingLanguages', ''))
+    prog_langs  = sanitize(skills.get('programmingLanguages', ''))
     tech_skills = sanitize(skills.get('technicalSkills', ''))
-    tools = sanitize(skills.get('tools', ''))
+    tools       = sanitize(skills.get('tools', ''))
 
     if prog_langs or tech_skills or tools:
         story += _section_header('Skills', styles)
         if prog_langs:
-            story.append(Paragraph(
-                f"<b>Programming Languages:</b> {prog_langs}", styles['body']))
+            story.append(Paragraph(f"<b>Programming Languages:</b>  {prog_langs}", styles['body']))
         if tech_skills:
-            story.append(Paragraph(
-                f"<b>Technical Skills:</b> {tech_skills}", styles['body']))
+            story.append(Paragraph(f"<b>Technical Skills:</b>  {tech_skills}", styles['body']))
         if tools:
-            story.append(Paragraph(
-                f"<b>Tools & Technologies:</b> {tools}", styles['body']))
+            story.append(Paragraph(f"<b>Tools &amp; Technologies:</b>  {tools}", styles['body']))
         story.append(Spacer(1, 3))
 
-    # ── Projects ─────────────────────────────────────────────────────────────
+    # ── Projects ──────────────────────────────────────────────────────────────
     projects = [p for p in data.get('projects', []) if p.get('name')]
     if projects:
         story += _section_header('Projects', styles)
         for proj in projects:
-            p_name  = sanitize(proj.get('name', ''))
-            p_tech  = sanitize(proj.get('technologies', ''))
-            p_desc  = sanitize(proj.get('description', ''))
-            p_link  = sanitize(proj.get('link', ''))
+            p_name = sanitize(proj.get('name', ''))
+            p_tech = sanitize(proj.get('technologies', ''))
+            p_desc = sanitize(proj.get('description', ''))
+            p_link = sanitize(proj.get('link', ''))
 
             title_text = p_name
             if p_tech:
-                title_text += f" | <font color='#64748b'><i>{p_tech}</i></font>"
+                title_text += f" | <i>{p_tech}</i>"
             story.append(Paragraph(title_text, styles['entry_title']))
 
             if p_desc:
                 for line in p_desc.split('\n'):
-                    line = line.strip()
+                    line = line.strip().lstrip('•- ').strip()
                     if line:
-                        story.append(Paragraph(f"• {line}", styles['bullet']))
+                        item = _bullet_item(line, styles)
+                        if item:
+                            story.append(item)
             if p_link:
-                story.append(Paragraph(
-                    f"<font color='#2563eb'>Link: {p_link}</font>", styles['body']))
+                story.append(Paragraph(f"Link: {p_link}", styles['body']))
             story.append(Spacer(1, 3))
 
-    # ── Internship / Experience ──────────────────────────────────────────────
+    # ── Experience ────────────────────────────────────────────────────────────
     experiences = [e for e in data.get('experience', []) if e.get('company') or e.get('role')]
     if experiences:
         story += _section_header('Internship / Experience', styles)
@@ -302,12 +260,14 @@ def build_resume(data: dict) -> bytes:
                 story.append(Paragraph(sub, styles['entry_subtitle']))
             if desc:
                 for line in desc.split('\n'):
-                    line = line.strip()
+                    line = line.strip().lstrip('•- ').strip()
                     if line:
-                        story.append(Paragraph(f"• {line}", styles['bullet']))
+                        item = _bullet_item(line, styles)
+                        if item:
+                            story.append(item)
             story.append(Spacer(1, 3))
 
-    # ── Certifications ───────────────────────────────────────────────────────
+    # ── Certifications ────────────────────────────────────────────────────────
     certs = [c for c in data.get('certifications', []) if c.get('name')]
     if certs:
         story += _section_header('Certifications', styles)
@@ -317,34 +277,34 @@ def build_resume(data: dict) -> bytes:
             c_year = sanitize(cert.get('year', ''))
             line = c_name
             if c_org:
-                line += f" — {c_org}"
+                line += f" \u2014 {c_org}"
             if c_year:
                 line += f" ({c_year})"
-            story.append(Paragraph(f"• {line}", styles['bullet']))
+            item = _bullet_item(line, styles)
+            if item:
+                story.append(item)
         story.append(Spacer(1, 3))
 
-    # ── Achievements ─────────────────────────────────────────────────────────
-    achievements = [a for a in data.get('achievements', []) if sanitize(a)]
+    # ── Achievements ──────────────────────────────────────────────────────────
+    achievements = [sanitize(a) for a in data.get('achievements', []) if sanitize(a)]
     if achievements:
         story += _section_header('Achievements', styles)
-        story += _bullet_points(achievements, styles)
+        for ach in achievements:
+            item = _bullet_item(ach, styles)
+            if item:
+                story.append(item)
         story.append(Spacer(1, 3))
 
-    # ── Coursework ───────────────────────────────────────────────────────────
+    # ── Coursework ────────────────────────────────────────────────────────────
     coursework = sanitize(data.get('coursework', ''))
     if coursework:
         story += _section_header('Relevant Coursework', styles)
         story.append(Paragraph(coursework, styles['body']))
-        story.append(Spacer(1, 3))
 
     doc.build(story)
     return buffer.getvalue()
 
 
 def generate_resume(data: dict) -> bytes:
-    """
-    Public entry point.
-    Validates, sanitizes, and generates a PDF resume.
-    Returns raw PDF bytes.
-    """
+    """Public entry point — validates, sanitizes, builds PDF."""
     return build_resume(data)

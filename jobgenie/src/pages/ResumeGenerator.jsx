@@ -9,7 +9,7 @@ const emptyExperience  = () => ({ company:'', role:'', duration:'', description:
 const emptyCert        = () => ({ name:'', organization:'', year:'' });
 
 const initialForm = () => ({
-  personal: { fullName:'', phone:'', email:'', linkedin:'', github:'', location:'' },
+  personal: { fullName:'', phone:'', email:'', linkedin:'', github:'', leetcode:'', codechef:'', medium:'', location:'' },
   summary: '',
   education: [emptyEducation()],
   skills: { programmingLanguages:'', technicalSkills:'', tools:'' },
@@ -172,6 +172,9 @@ export default function ResumeGenerator() {
           <Field label="Location"               value={form.personal.location}  onChange={e => setPersonal('location',  e.target.value)} placeholder="Bangalore, India" />
           <Field label="LinkedIn URL"           value={form.personal.linkedin}  onChange={e => setPersonal('linkedin',  e.target.value)} placeholder="linkedin.com/in/yourprofile" />
           <Field label="GitHub URL"             value={form.personal.github}    onChange={e => setPersonal('github',    e.target.value)} placeholder="github.com/yourusername" />
+          <Field label="LeetCode URL"           value={form.personal.leetcode}  onChange={e => setPersonal('leetcode',  e.target.value)} placeholder="leetcode.com/yourprofile" />
+          <Field label="CodeChef URL"           value={form.personal.codechef}  onChange={e => setPersonal('codechef',  e.target.value)} placeholder="codechef.com/users/yourprofile" />
+          <Field label="Medium URL"             value={form.personal.medium}    onChange={e => setPersonal('medium',    e.target.value)} placeholder="medium.com/@yourprofile" />
         </div>
       </SectionCard>
 
