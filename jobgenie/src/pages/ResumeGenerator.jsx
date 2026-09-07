@@ -187,18 +187,18 @@ export default function ResumeGenerator() {
         <Grid2>
           {/* Left column */}
           <div style={{ display:'flex', flexDirection:'column', gap:'1rem' }}>
-            <Field label="Full Name"   required value={form.personal.fullName} onChange={e=>setPersonal('fullName', e.target.value)} placeholder="Deepika R" />
-            <Field label="Email"       required value={form.personal.email}    onChange={e=>setPersonal('email',    e.target.value)} placeholder="you@example.com" type="email" />
+            <Field label="Full Name"   required value={form.personal.fullName} onChange={e=>setPersonal('fullName', e.target.value)} placeholder="Your full name" />
+            <Field label="Email"       required value={form.personal.email}    onChange={e=>setPersonal('email',    e.target.value)} placeholder="your@email.com" type="email" />
             <Field label="LinkedIn URL"         value={form.personal.linkedin} onChange={e=>setPersonal('linkedin', e.target.value)} placeholder="linkedin.com/in/yourprofile" />
             <Field label="LeetCode URL"         value={form.personal.leetcode} onChange={e=>setPersonal('leetcode', e.target.value)} placeholder="leetcode.com/yourprofile" />
             <Field label="Medium URL"           value={form.personal.medium}   onChange={e=>setPersonal('medium',   e.target.value)} placeholder="medium.com/@yourprofile" />
           </div>
           {/* Right column */}
           <div style={{ display:'flex', flexDirection:'column', gap:'1rem' }}>
-            <Field label="Phone Number" required value={form.personal.phone}    onChange={e=>setPersonal('phone',    e.target.value)} placeholder="+91 9876543210" />
-            <Field label="Location"              value={form.personal.location} onChange={e=>setPersonal('location', e.target.value)} placeholder="Bangalore, India" />
+            <Field label="Phone Number" required value={form.personal.phone}    onChange={e=>setPersonal('phone',    e.target.value)} placeholder="Your phone number" />
+            <Field label="Location"              value={form.personal.location} onChange={e=>setPersonal('location', e.target.value)} placeholder="City, State" />
             <Field label="GitHub URL"            value={form.personal.github}   onChange={e=>setPersonal('github',   e.target.value)} placeholder="github.com/yourusername" />
-            <Field label="CodeChef URL"          value={form.personal.codechef} onChange={e=>setPersonal('codechef', e.target.value)} placeholder="codechef.com/users/yourprofile" />
+            <Field label="CodeChef URL"          value={form.personal.codechef} onChange={e=>setPersonal('codechef', e.target.value)} placeholder="codechef.com/users/yourusername" />
           </div>
         </Grid2>
       </SectionCard>
@@ -207,7 +207,7 @@ export default function ResumeGenerator() {
       <SectionCard title="Professional Summary" icon={IDoc}>
         <Field textarea label="Career Objective / Professional Summary" value={form.summary}
           onChange={e=>setForm(f=>({...f,summary:e.target.value}))} rows={4}
-          placeholder="A motivated Computer Science graduate with expertise in full-stack development, seeking opportunities to build impactful AI-driven solutions..." />
+          placeholder="Write a brief summary about your skills, goals, and what you're looking for..." />
       </SectionCard>
 
       {/* ── Education ────────────────────────────────────────────── */}
@@ -216,8 +216,8 @@ export default function ResumeGenerator() {
           <EntryCard key={i}>
             {form.education.length > 1 && <RemoveBtn onClick={() => removeItem('education', i)} />}
             <Grid2>
-              <Field label="Degree / Course" required value={edu.degree}    onChange={e=>updateList('education',i,'degree',   e.target.value)} placeholder="B.Tech Artificial Intelligence" />
-              <Field label="College / University"      value={edu.college}   onChange={e=>updateList('education',i,'college',  e.target.value)} placeholder="KPR Institute of Engineering" />
+              <Field label="Degree / Course" required value={edu.degree}    onChange={e=>updateList('education',i,'degree',   e.target.value)} placeholder="e.g. B.Tech Computer Science" />
+              <Field label="College / University"      value={edu.college}   onChange={e=>updateList('education',i,'college',  e.target.value)} placeholder="Your college or university" />
               <Field label="Location"                  value={edu.location}  onChange={e=>updateList('education',i,'location', e.target.value)} placeholder="e.g. Coimbatore" />
               <Field label="CGPA / Percentage"         value={edu.cgpa}      onChange={e=>updateList('education',i,'cgpa',     e.target.value)} placeholder="e.g. 8.5 / 85%" />
             </Grid2>
@@ -233,9 +233,9 @@ export default function ResumeGenerator() {
       {/* ── Skills ───────────────────────────────────────────────── */}
       <SectionCard title="Skills" icon={IZap}>
         <div style={{ display:'flex', flexDirection:'column', gap:'1rem' }}>
-          <Field label="Programming Languages" value={form.skills.programmingLanguages} onChange={e=>setSkills('programmingLanguages',e.target.value)} placeholder="Python, Java, JavaScript, TypeScript, C++" />
-          <Field label="Technical Skills"      value={form.skills.technicalSkills}      onChange={e=>setSkills('technicalSkills',      e.target.value)} placeholder="React.js, Node.js, Flask, FastAPI, REST APIs, SQL, MongoDB" />
-          <Field label="Tools & Technologies"  value={form.skills.tools}               onChange={e=>setSkills('tools',               e.target.value)} placeholder="Git, GitHub, Docker, AWS (EC2, S3, Lambda), VS Code, Postman" />
+          <Field label="Programming Languages" value={form.skills.programmingLanguages} onChange={e=>setSkills('programmingLanguages',e.target.value)} placeholder="e.g. Python, Java, JavaScript" />
+          <Field label="Technical Skills"      value={form.skills.technicalSkills}      onChange={e=>setSkills('technicalSkills',      e.target.value)} placeholder="e.g. React, Node.js, SQL, REST APIs" />
+          <Field label="Tools & Technologies"  value={form.skills.tools}               onChange={e=>setSkills('tools',               e.target.value)} placeholder="e.g. Git, Docker, AWS, VS Code" />
         </div>
       </SectionCard>
 
@@ -245,8 +245,8 @@ export default function ResumeGenerator() {
           <EntryCard key={i}>
             {form.projects.length > 1 && <RemoveBtn onClick={() => removeItem('projects', i)} />}
             <Grid2>
-              <Field label="Project Name"            value={proj.name}         onChange={e=>updateList('projects',i,'name',        e.target.value)} placeholder="JobGenie AI" />
-              <Field label="Technologies Used"       value={proj.technologies} onChange={e=>updateList('projects',i,'technologies',e.target.value)} placeholder="React, Flask, Python, SQLite" />
+              <Field label="Project Name"            value={proj.name}         onChange={e=>updateList('projects',i,'name',        e.target.value)} placeholder="Project name" />
+              <Field label="Technologies Used"       value={proj.technologies} onChange={e=>updateList('projects',i,'technologies',e.target.value)} placeholder="e.g. React, Flask, Python" />
             </Grid2>
             <div style={{ marginTop:'1rem' }}>
               <Field label="Project Link (optional)" value={proj.link}         onChange={e=>updateList('projects',i,'link',        e.target.value)} placeholder="https://github.com/username/project" />
@@ -267,9 +267,9 @@ export default function ResumeGenerator() {
           <EntryCard key={i}>
             <RemoveBtn onClick={() => removeItem('experience', i)} />
             <Grid3>
-              <Field label="Company Name" value={exp.company}  onChange={e=>updateList('experience',i,'company', e.target.value)} placeholder="ABC Technologies" />
-              <Field label="Role"         value={exp.role}     onChange={e=>updateList('experience',i,'role',    e.target.value)} placeholder="Frontend Intern" />
-              <Field label="Duration"     value={exp.duration} onChange={e=>updateList('experience',i,'duration',e.target.value)} placeholder="Jan 2025 – Mar 2025" />
+              <Field label="Company Name" value={exp.company}  onChange={e=>updateList('experience',i,'company', e.target.value)} placeholder="Company name" />
+              <Field label="Role"         value={exp.role}     onChange={e=>updateList('experience',i,'role',    e.target.value)} placeholder="Your role / position" />
+              <Field label="Duration"     value={exp.duration} onChange={e=>updateList('experience',i,'duration',e.target.value)} placeholder="e.g. Jun 2024 – Aug 2024" />
             </Grid3>
             <div style={{ marginTop:'1rem' }}>
               <Field textarea label="Description" value={exp.description} onChange={e=>updateList('experience',i,'description',e.target.value)}
@@ -286,9 +286,9 @@ export default function ResumeGenerator() {
           <EntryCard key={i}>
             {form.certifications.length > 1 && <RemoveBtn onClick={() => removeItem('certifications', i)} />}
             <Grid3>
-              <Field label="Certification Name"   value={cert.name}         onChange={e=>updateList('certifications',i,'name',        e.target.value)} placeholder="AWS Cloud Practitioner" />
-              <Field label="Issuing Organization" value={cert.organization} onChange={e=>updateList('certifications',i,'organization',e.target.value)} placeholder="Amazon Web Services" />
-              <Field label="Year"                 value={cert.year}         onChange={e=>updateList('certifications',i,'year',        e.target.value)} placeholder="2024" />
+              <Field label="Certification Name"   value={cert.name}         onChange={e=>updateList('certifications',i,'name',        e.target.value)} placeholder="Certification name" />
+              <Field label="Issuing Organization" value={cert.organization} onChange={e=>updateList('certifications',i,'organization',e.target.value)} placeholder="Issuing organization" />
+              <Field label="Year"                 value={cert.year}         onChange={e=>updateList('certifications',i,'year',        e.target.value)} placeholder="Year" />
             </Grid3>
           </EntryCard>
         ))}
@@ -302,7 +302,7 @@ export default function ResumeGenerator() {
             <div key={i} style={{ display:'flex', gap:'0.5rem', alignItems:'center' }}>
               <input value={ach}
                 onChange={e => { const arr=[...form.achievements]; arr[i]=e.target.value; setForm(f=>({...f,achievements:arr})); }}
-                placeholder="Won 1st place in National Hackathon 2024 — built AI resume analyzer in 24 hours"
+                placeholder="Describe your achievement..."
                 className="rose-input" style={{ flex:1 }} />
               {form.achievements.length > 1 && (
                 <button onClick={() => setForm(f=>({...f,achievements:f.achievements.filter((_,idx)=>idx!==i)}))}
@@ -321,7 +321,7 @@ export default function ResumeGenerator() {
         <p style={{ fontSize:'0.78rem', color:'var(--rose-secondary)', marginTop:'-0.25rem' }}>Optional — list relevant courses separated by commas</p>
         <Field label="Courses" value={form.coursework}
           onChange={e=>setForm(f=>({...f,coursework:e.target.value}))}
-          placeholder="Data Structures & Algorithms, Machine Learning, Operating Systems, DBMS, Computer Networks" />
+          placeholder="e.g. Data Structures, Algorithms, Operating Systems, DBMS" />
       </SectionCard>
 
       {/* ── Error ────────────────────────────────────────────────── */}
