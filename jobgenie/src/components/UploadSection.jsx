@@ -11,8 +11,8 @@ export default function UploadSection({ onAnalyze, loading }) {
   };
 
   return (
-    <div className="bg-white rounded-2xl shadow-lg p-6">
-      <h2 className="text-base font-semibold text-gray-800 mb-4 flex items-center gap-2">
+    <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+      <h2 className="text-base font-semibold mb-4 flex items-center gap-2" style={{ color: '#4A4A4A' }}>
         <span>📄</span> Upload Resume
       </h2>
       <div
@@ -20,15 +20,14 @@ export default function UploadSection({ onAnalyze, loading }) {
         onDragLeave={() => setDrag(false)}
         onDrop={(e) => { e.preventDefault(); setDrag(false); pick(e.dataTransfer.files[0]); }}
         onClick={() => ref.current.click()}
-        className={`border-2 border-dashed rounded-xl p-8 text-center cursor-pointer transition-all ${
-          drag ? 'border-indigo-500 bg-indigo-50'
-          : file ? 'border-green-400 bg-green-50'
-          : 'border-gray-300 hover:border-indigo-400 hover:bg-indigo-50'
-        }`}
-      >
+        className="border-2 border-dashed rounded-xl p-8 text-center cursor-pointer transition-all"
+        style={{
+          borderColor: drag ? '#8E4585' : file ? '#996666' : '#d1d5db',
+          background:  drag ? '#f5eef5' : file ? '#f7f0ee' : 'white',
+        }}>
         <p className="text-4xl mb-2">{file ? '✅' : '📁'}</p>
         {file
-          ? <p className="text-sm font-semibold text-green-600">{file.name}</p>
+          ? <p className="text-sm font-semibold" style={{ color: '#996666' }}>{file.name}</p>
           : <p className="text-sm text-gray-500">Drag & drop your PDF here, or click to browse</p>}
         <input ref={ref} type="file" accept=".pdf" className="hidden"
           onChange={(e) => pick(e.target.files[0])} />
@@ -36,8 +35,8 @@ export default function UploadSection({ onAnalyze, loading }) {
       <button
         onClick={() => { if (!file) return alert('Select a PDF first.'); onAnalyze(file); }}
         disabled={loading || !file}
-        className="mt-4 w-full bg-indigo-600 text-white py-3 rounded-xl font-semibold hover:bg-indigo-700 disabled:opacity-40 disabled:cursor-not-allowed shadow-lg transition-all flex items-center justify-center gap-2"
-      >
+        className="mt-4 w-full text-white py-3 rounded-xl font-semibold disabled:opacity-40 disabled:cursor-not-allowed shadow-sm transition-all flex items-center justify-center gap-2"
+        style={{ background: '#8E4585' }}>
         {loading ? (
           <><svg className="animate-spin h-4 w-4" fill="none" viewBox="0 0 24 24">
             <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />

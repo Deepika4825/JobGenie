@@ -4,7 +4,7 @@ import Logo from '../components/Logo';
 import { apiSignup } from '../services/auth';
 import { useProfile } from '../context/ProfileContext';
 
-const inp = 'w-full border border-gray-300 rounded-xl px-4 py-3 text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500';
+const inp = 'w-full border border-gray-300 rounded-xl px-4 py-3 text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#8E4585]';
 
 export default function Signup() {
   const navigate = useNavigate();
@@ -44,8 +44,8 @@ export default function Signup() {
       <div className="w-full max-w-md">
         <div className="flex justify-center mb-8"><Logo size={60} /></div>
         <div className="bg-white rounded-2xl shadow-lg p-8">
-          <h2 className="text-2xl font-bold text-gray-900 mb-1">Create account</h2>
-          <p className="text-gray-500 text-sm mb-6">Join JobGenie and supercharge your job search</p>
+          <h2 className="text-2xl font-bold mb-1" style={{ color: '#4A4A4A' }}>Create account</h2>
+          <p className="text-sm mb-6" style={{ color: '#996666' }}>Join JobGenie and supercharge your job search</p>
           {error && <div className="text-red-600 text-sm mb-4 bg-red-50 border border-red-200 p-3 rounded-xl">{error}</div>}
           <form onSubmit={handleSubmit} className="flex flex-col gap-4">
             <div>
@@ -74,13 +74,14 @@ export default function Signup() {
                 onChange={(e) => set('password', e.target.value)} className={inp} />
             </div>
             <button type="submit" disabled={loading}
-              className="bg-indigo-600 text-white py-3 rounded-xl font-semibold hover:bg-indigo-700 disabled:opacity-50 transition-colors mt-1">
+              className="text-white py-3 rounded-xl font-semibold disabled:opacity-50 transition-colors mt-1"
+              style={{ background: '#8E4585' }}>
               {loading ? 'Creating account...' : 'Sign Up'}
             </button>
           </form>
           <p className="text-center text-sm text-gray-500 mt-6">
             Already have an account?{' '}
-            <Link to="/login" className="text-indigo-600 font-semibold hover:underline">Login</Link>
+            <Link to="/login" className="font-semibold hover:underline" style={{ color: '#8E4585' }}>Login</Link>
           </p>
         </div>
         <p className="text-center text-xs text-gray-400 mt-6">
