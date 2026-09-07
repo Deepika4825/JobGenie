@@ -22,48 +22,92 @@ export default function Sidebar({ open, onClose }) {
 
   return (
     <>
-      {open && <div className="fixed inset-0 bg-black/30 z-20" onClick={onClose} />}
-      <aside className={`fixed top-0 left-0 h-full w-64 z-30 flex flex-col
-        transition-transform duration-300 ease-in-out ${open ? 'translate-x-0' : '-translate-x-full'}`}
-        style={{ background: 'white', borderRight: '1px solid var(--rose-border)', boxShadow: '2px 0 12px rgba(142,69,133,0.08)' }}>
+      {open && (
+        <div onClick={onClose} style={{
+          position: 'fixed', inset: 0, background: 'rgba(74,74,74,0.25)',
+          zIndex: 20, backdropFilter: 'blur(2px)',
+        }} />
+      )}
+      <aside className="er-sidebar" style={{
+        position: 'fixed', top: 0, left: 0, height: '100%', width: '260px',
+        zIndex: 30, display: 'flex', flexDirection: 'column',
+        transform: open ? 'translateX(0)' : 'translateX(-100%)',
+        transition: 'transform 0.28s cubic-bezier(0.4,0,0.2,1)',
+      }}>
 
-        <div className="flex items-center justify-between px-5 py-4" style={{ borderBottom: '1px solid var(--rose-border)' }}>
-          <Logo size={36} />
-          <button onClick={onClose} className="text-xl transition-colors"
-            style={{ color: 'var(--rose-secondary)' }}
-            onMouseEnter={e => e.target.style.color = 'var(--rose-purple)'}
-            onMouseLeave={e => e.target.style.color = 'var(--rose-secondary)'}>✕</button>
+        {/* Logo row */}
+        <div style={{
+          display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+          padding: '1rem 1.25rem', borderBottom: '1px solid var(--er-border)',
+        }}>
+          <Logo size={34} />
+          <button onClick={onClose} style={{
+            width: '28px', height: '28px', borderRadius: '8px', border: 'none',
+            background: 'transparent', cursor: 'pointer', fontSize: '1rem',
+            color: 'var(--er-mauve)', display: 'flex', alignItems: 'center', justifyContent: 'center',
+            transition: 'background 0.15s',
+          }}
+          onMouseEnter={e => e.currentTarget.style.background = 'var(--er-purple-tint)'}
+          onMouseLeave={e => e.currentTarget.style.background = 'transparent'}>✕</button>
         </div>
 
-        <div className="px-5 py-4" style={{ borderBottom: '1px solid var(--rose-border)' }}>
-          <div className="flex items-center gap-3">
+        {/* User info */}
+        <div style={{ padding: '1rem 1.25rem', borderBottom: '1px solid var(--er-border)' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
             <Avatar avatar={profile.avatar} name={profile.name} size="sm" />
-            <div className="overflow-hidden">
-              <p className="text-sm font-semibold truncate" style={{ color: 'var(--rose-dark)' }}>{profile.name || 'User'}</p>
-              <p className="text-xs truncate" style={{ color: 'var(--rose-secondary)' }}>
+            <div style={{ overflow: 'hidden' }}>
+              <p style={{ fontSize: '0.875rem', fontWeight: 600, color: 'var(--er-dark)', margin: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                {profile.name || 'User'}
+              </p>
+              <p style={{ fontSize: '0.72rem', color: 'var(--er-mauve)', margin: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                 {profile.username ? `@${profile.username}` : profile.email || ''}
               </p>
             </div>
           </div>
         </div>
 
-        <nav className="flex-1 px-3 py-4 space-y-1">
+        {/* Nav links */}
+        <nav style={{ flex: 1, padding: '0.75rem 0.75rem', display: 'flex', flexDirection: 'column', gap: '2px' }}>
           {NAV.map(({ to, icon, label }) => (
             <NavLink key={to} to={to} onClick={onClose}
-              className="flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-medium transition-all"
-              style={({ isActive }) => isActive
-                ? { background: 'var(--rose-purple)', color: 'white' }
-                : { color: 'var(--rose-dark)' }}
-              onMouseEnter={e => { if (!e.currentTarget.style.background.includes('8E4585')) e.currentTarget.style.background = 'var(--rose-light)'; }}
-              onMouseLeave={e => { if (!e.currentTarget.style.background.includes('8E4585')) e.currentTarget.style.background = ''; }}>
-              <span>{icon}</span>{label}
+              style={({ isActive }) => ({
+                display: 'flex', alignItems: 'center', gap: '0.625rem',
+                padding: '0.625rem 0.875rem', borderRadius: '0.875rem',
+                fontSize: '0.875rem', fontWeight: 500, textDecoration: 'none',
+                transition: 'all 0.15s ease',
+                background: isActive ? 'var(--er-purple)' : 'transparent',
+                color: isActive ? 'white' : 'var(--er-dark)',
+                boxShadow: isActive ? '0 2px 8px rgba(142,69,133,0.25)' : 'none',
+              })}
+              onMouseEnter={e => {
+                if (!e.currentTarget.style.background.includes('8E4585') && !e.currentTarget.style.background.includes('er-purple)')) {
+                  e.currentTarget.style.background = 'var(--er-purple-tint)';
+                  e.currentTarget.style.color = 'var(--er-purple)';
+                }
+              }}
+              onMouseLeave={e => {
+                if (!e.currentTarget.getAttribute('aria-current')) {
+                  e.currentTarget.style.background = 'transparent';
+                  e.currentTarget.style.color = 'var(--er-dark)';
+                }
+              }}>
+              <span style={{ fontSize: '1rem' }}>{icon}</span>
+              <span>{label}</span>
             </NavLink>
           ))}
         </nav>
 
-        <div className="px-4 py-4" style={{ borderTop: '1px solid var(--rose-border)' }}>
-          <button onClick={handleLogout}
-            className="w-full flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-medium transition-colors text-red-500 hover:bg-red-50">
+        {/* Logout */}
+        <div style={{ padding: '0.75rem', borderTop: '1px solid var(--er-border)' }}>
+          <button onClick={handleLogout} style={{
+            width: '100%', display: 'flex', alignItems: 'center', gap: '0.625rem',
+            padding: '0.625rem 0.875rem', borderRadius: '0.875rem',
+            border: 'none', background: 'transparent', cursor: 'pointer',
+            fontSize: '0.875rem', fontWeight: 500, color: '#ef4444',
+            transition: 'background 0.15s',
+          }}
+          onMouseEnter={e => e.currentTarget.style.background = '#fef2f2'}
+          onMouseLeave={e => e.currentTarget.style.background = 'transparent'}>
             <span>🚪</span> Logout
           </button>
         </div>

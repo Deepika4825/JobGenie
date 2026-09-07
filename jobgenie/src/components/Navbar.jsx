@@ -9,6 +9,7 @@ const TITLES = {
   '/jobs':             'Job Recommendations',
   '/resume-generator': 'Resume Generator',
   '/profile':          'My Profile',
+  '/setup':            'Profile Setup',
 };
 
 export default function Navbar({ onToggle }) {
@@ -18,36 +19,52 @@ export default function Navbar({ onToggle }) {
   const title = TITLES[pathname] || 'JobGenie';
 
   return (
-    <header style={{ background: 'white', borderBottom: '1px solid var(--rose-border)' }}
-      className="sticky top-0 z-10 shadow-sm px-4 md:px-6 py-3 flex items-center gap-4">
+    <header className="er-navbar sticky top-0 z-10 px-4 md:px-6"
+      style={{ height: '58px', display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
 
-      <button onClick={onToggle} aria-label="Toggle sidebar"
-        className="flex flex-col gap-1.5 p-1.5 rounded-lg transition-colors"
-        style={{ '--tw-bg-opacity': 1 }}
-        onMouseEnter={e => e.currentTarget.style.background = 'var(--rose-warm)'}
+      {/* Hamburger */}
+      <button onClick={onToggle} aria-label="Menu"
+        style={{
+          display: 'flex', flexDirection: 'column', gap: '5px',
+          padding: '8px', borderRadius: '10px', border: 'none',
+          background: 'transparent', cursor: 'pointer', transition: 'background 0.15s',
+        }}
+        onMouseEnter={e => e.currentTarget.style.background = 'var(--er-purple-tint)'}
         onMouseLeave={e => e.currentTarget.style.background = 'transparent'}>
-        <span className="block w-5 h-0.5 rounded" style={{ background: 'var(--rose-dark)' }} />
-        <span className="block w-5 h-0.5 rounded" style={{ background: 'var(--rose-dark)' }} />
-        <span className="block w-5 h-0.5 rounded" style={{ background: 'var(--rose-dark)' }} />
+        {[0,1,2].map(i => (
+          <span key={i} style={{ display: 'block', width: '20px', height: '2px', borderRadius: '2px', background: 'var(--er-dark)', transition: 'background 0.15s' }} />
+        ))}
       </button>
 
-      <Logo size={28} showText={false} />
-      <h1 className="text-base font-semibold" style={{ color: 'var(--rose-dark)' }}>{title}</h1>
+      {/* Logo */}
+      <Logo size={26} showText={false} />
 
-      <div className="ml-auto flex items-center gap-2">
+      {/* Divider */}
+      <span style={{ width: '1px', height: '20px', background: 'var(--er-border)', flexShrink: 0 }} />
+
+      {/* Page title */}
+      <h1 style={{ fontSize: '0.9rem', fontWeight: 600, color: 'var(--er-dark)', margin: 0, letterSpacing: '-0.01em' }}>{title}</h1>
+
+      <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: '6px' }}>
         <NotificationBell />
+
+        {/* Profile pill */}
         <button onClick={() => navigate('/profile')}
-          className="flex items-center gap-2.5 pl-1 pr-3 py-1.5 rounded-xl border transition-all"
-          style={{ borderColor: 'transparent' }}
-          onMouseEnter={e => { e.currentTarget.style.background = 'var(--rose-light)'; e.currentTarget.style.borderColor = 'var(--rose-primary)'; }}
-          onMouseLeave={e => { e.currentTarget.style.background = ''; e.currentTarget.style.borderColor = 'transparent'; }}>
+          style={{
+            display: 'flex', alignItems: 'center', gap: '8px',
+            padding: '5px 10px 5px 5px', borderRadius: '999px',
+            border: '1px solid var(--er-border)', background: 'transparent',
+            cursor: 'pointer', transition: 'all 0.18s ease',
+          }}
+          onMouseEnter={e => { e.currentTarget.style.background = 'var(--er-purple-tint)'; e.currentTarget.style.borderColor = 'rgba(142,69,133,0.3)'; }}
+          onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.borderColor = 'var(--er-border)'; }}>
           <Avatar avatar={profile.avatar} name={profile.name} size="sm" />
-          <div className="hidden sm:flex flex-col items-start leading-tight">
-            <span className="text-xs font-bold truncate max-w-[100px]" style={{ color: 'var(--rose-purple)' }}>
+          <div className="hidden sm:flex" style={{ flexDirection: 'column', alignItems: 'flex-start', lineHeight: 1.2 }}>
+            <span style={{ fontSize: '0.72rem', fontWeight: 700, color: 'var(--er-purple)', maxWidth: '90px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
               {profile.username ? `@${profile.username}` : profile.name || 'Profile'}
             </span>
             {profile.name && profile.username && (
-              <span className="text-xs truncate max-w-[100px]" style={{ color: 'var(--rose-secondary)' }}>{profile.name}</span>
+              <span style={{ fontSize: '0.68rem', color: 'var(--er-mauve)', maxWidth: '90px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{profile.name}</span>
             )}
           </div>
         </button>

@@ -1,99 +1,329 @@
 @import "tailwindcss";
 
-/* ── Evening Rose Design Tokens ────────────────────────────────────────────── */
+/* ═══════════════════════════════════════════════════════════════
+   EVENING ROSE — Complete Design System
+   ═══════════════════════════════════════════════════════════════ */
 :root {
-  --rose-primary:   #DCA1A1;   /* soft rose – accent / backgrounds */
-  --rose-secondary: #996666;   /* muted mauve – secondary text, borders */
-  --rose-purple:    #8E4585;   /* purple/mauve – primary interactive */
-  --rose-dark:      #4A4A4A;   /* charcoal – primary text */
+  /* Core palette */
+  --er-rose:      #DCA1A1;   /* primary rose */
+  --er-mauve:     #996666;   /* muted mauve / secondary */
+  --er-purple:    #8E4585;   /* deep mauve / primary action */
+  --er-dark:      #4A4A4A;   /* charcoal / primary text */
+  --er-hover:     #7a3a72;   /* darker purple for hover */
 
-  /* Derived tints */
-  --rose-bg:        #fdf6f6;   /* page background */
-  --rose-surface:   #ffffff;   /* card surface */
-  --rose-border:    #e8d0d0;   /* subtle border */
-  --rose-light:     #f5eef5;   /* purple tint bg */
-  --rose-warm:      #f7f0ee;   /* warm rose tint bg */
-  --rose-hover:     #7a3a72;   /* darker purple for hover */
+  /* Surfaces */
+  --er-bg:        #faf2f2;   /* rich rose-tinted page background */
+  --er-bg2:       #f5e8e8;   /* slightly deeper background for depth */
+  --er-surface:   #ffffff;   /* card surface */
+  --er-surface2:  #fdf7f7;   /* slightly tinted surface */
+
+  /* Borders */
+  --er-border:    #e2c5c5;   /* main border */
+  --er-border2:   #d4b0b0;   /* stronger border */
+
+  /* Tint backgrounds */
+  --er-purple-tint: #f3eaf3;  /* light purple tint */
+  --er-rose-tint:   #fdf0f0;  /* light rose tint */
+  --er-warm-tint:   #faf0ee;  /* warm rose tint */
+
+  /* Aliases for backward compatibility */
+  --rose-primary:   #DCA1A1;
+  --rose-secondary: #996666;
+  --rose-purple:    #8E4585;
+  --rose-dark:      #4A4A4A;
+  --rose-bg:        #faf2f2;
+  --rose-surface:   #ffffff;
+  --rose-border:    #e2c5c5;
+  --rose-light:     #f3eaf3;
+  --rose-warm:      #faf0ee;
+  --rose-hover:     #7a3a72;
 }
 
-/* ── Global reset ───────────────────────────────────────────────────────────── */
+/* ── Global ──────────────────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; }
+
 body {
-  background-color: var(--rose-bg);
-  color: var(--rose-dark);
+  background: var(--er-bg);
+  color: var(--er-dark);
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  -webkit-font-smoothing: antialiased;
 }
 
-/* ── Scrollbar ──────────────────────────────────────────────────────────────── */
-::-webkit-scrollbar { width: 6px; }
-::-webkit-scrollbar-track { background: var(--rose-bg); }
-::-webkit-scrollbar-thumb { background: var(--rose-primary); border-radius: 3px; }
+/* Rich page background with gradient */
+#root {
+  min-height: 100vh;
+  background:
+    radial-gradient(ellipse at 0% 0%, rgba(220,161,161,0.18) 0%, transparent 60%),
+    radial-gradient(ellipse at 100% 100%, rgba(142,69,133,0.08) 0%, transparent 60%),
+    var(--er-bg);
+}
 
-/* ── Utility classes for the theme ─────────────────────────────────────────── */
+/* ── Scrollbar ───────────────────────────────────────────────── */
+::-webkit-scrollbar { width: 5px; height: 5px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--er-rose); border-radius: 10px; }
+::-webkit-scrollbar-thumb:hover { background: var(--er-mauve); }
+
+/* ══════════════════════════════════════════════════════════════
+   BUTTON SYSTEM
+   ══════════════════════════════════════════════════════════════ */
 .btn-primary {
-  background-color: var(--rose-purple);
-  color: white;
-  border-radius: 0.75rem;
-  font-weight: 600;
-  padding: 0.75rem 1.5rem;
-  transition: background-color 0.15s ease;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--er-purple);
+  color: #fff;
   border: none;
+  border-radius: 0.875rem;
+  font-weight: 600;
+  font-size: 0.9rem;
+  padding: 0.75rem 1.75rem;
   cursor: pointer;
+  transition: background 0.18s ease, transform 0.12s ease, box-shadow 0.18s ease;
+  box-shadow: 0 2px 8px rgba(142,69,133,0.25);
+  letter-spacing: 0.01em;
+  text-decoration: none;
 }
-.btn-primary:hover:not(:disabled) { background-color: var(--rose-hover); }
-.btn-primary:disabled { opacity: 0.45; cursor: not-allowed; }
+.btn-primary:hover:not(:disabled) {
+  background: var(--er-hover);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 14px rgba(142,69,133,0.35);
+}
+.btn-primary:active:not(:disabled) { transform: translateY(0); }
+.btn-primary:disabled { opacity: 0.42; cursor: not-allowed; box-shadow: none; }
 
 .btn-secondary {
-  background-color: transparent;
-  color: var(--rose-secondary);
-  border-radius: 0.75rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  color: var(--er-mauve);
+  border: 1.5px solid var(--er-border2);
+  border-radius: 0.875rem;
   font-weight: 600;
-  padding: 0.75rem 1.5rem;
-  border: 1.5px solid var(--rose-border);
-  transition: all 0.15s ease;
+  font-size: 0.9rem;
+  padding: 0.75rem 1.75rem;
   cursor: pointer;
+  transition: all 0.18s ease;
 }
-.btn-secondary:hover { background-color: var(--rose-warm); border-color: var(--rose-secondary); }
+.btn-secondary:hover {
+  background: var(--er-warm-tint);
+  border-color: var(--er-mauve);
+  color: var(--er-purple);
+}
 
+/* ══════════════════════════════════════════════════════════════
+   CARD SYSTEM
+   ══════════════════════════════════════════════════════════════ */
 .rose-card {
-  background: var(--rose-surface);
-  border-radius: 1rem;
-  border: 1px solid var(--rose-border);
-  box-shadow: 0 1px 4px rgba(142, 69, 133, 0.06);
+  background: var(--er-surface);
+  border-radius: 1.125rem;
+  border: 1px solid var(--er-border);
+  box-shadow: 0 1px 3px rgba(142,69,133,0.05), 0 4px 16px rgba(220,161,161,0.08);
   padding: 1.5rem;
+  transition: box-shadow 0.2s ease;
+}
+.rose-card:hover {
+  box-shadow: 0 2px 8px rgba(142,69,133,0.08), 0 6px 24px rgba(220,161,161,0.12);
 }
 
+/* Premium card variant */
+.rose-card-premium {
+  background: linear-gradient(145deg, #ffffff 0%, var(--er-rose-tint) 100%);
+  border-radius: 1.25rem;
+  border: 1px solid var(--er-border);
+  box-shadow: 0 2px 8px rgba(142,69,133,0.07), 0 8px 32px rgba(220,161,161,0.1);
+  padding: 1.75rem;
+}
+
+/* ══════════════════════════════════════════════════════════════
+   FORM CONTROLS
+   ══════════════════════════════════════════════════════════════ */
 .rose-input {
   width: 100%;
-  background: white;
-  border: 1.5px solid var(--rose-border);
+  background: var(--er-surface);
+  border: 1.5px solid var(--er-border);
   border-radius: 0.75rem;
-  padding: 0.625rem 1rem;
+  padding: 0.65rem 1rem;
   font-size: 0.875rem;
-  color: var(--rose-dark);
+  color: var(--er-dark);
   outline: none;
-  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+  transition: border-color 0.18s ease, box-shadow 0.18s ease, background 0.18s ease;
+  appearance: none;
+  -webkit-appearance: none;
 }
-.rose-input::placeholder { color: var(--rose-secondary); opacity: 0.7; }
+.rose-input::placeholder { color: var(--er-mauve); opacity: 0.65; }
+.rose-input:hover { border-color: var(--er-rose); }
 .rose-input:focus {
-  border-color: var(--rose-purple);
-  box-shadow: 0 0 0 3px rgba(142, 69, 133, 0.12);
+  border-color: var(--er-purple);
+  box-shadow: 0 0 0 3px rgba(142,69,133,0.13);
+  background: var(--er-surface);
 }
 
-.rose-section-title {
-  font-size: 0.7rem;
+/* Custom select arrow */
+.rose-select {
+  width: 100%;
+  background: var(--er-surface)
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%23996666' stroke-width='1.5' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E")
+    no-repeat right 0.875rem center;
+  border: 1.5px solid var(--er-border);
+  border-radius: 0.75rem;
+  padding: 0.65rem 2.5rem 0.65rem 1rem;
+  font-size: 0.875rem;
+  color: var(--er-dark);
+  outline: none;
+  cursor: pointer;
+  transition: border-color 0.18s ease, box-shadow 0.18s ease;
+  appearance: none;
+  -webkit-appearance: none;
+}
+.rose-select:hover { border-color: var(--er-rose); }
+.rose-select:focus {
+  border-color: var(--er-purple);
+  box-shadow: 0 0 0 3px rgba(142,69,133,0.13);
+}
+
+/* ══════════════════════════════════════════════════════════════
+   TYPOGRAPHY HELPERS
+   ══════════════════════════════════════════════════════════════ */
+.rose-heading {
+  font-size: 1rem;
   font-weight: 700;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  color: var(--rose-purple);
+  color: var(--er-dark);
+  letter-spacing: -0.01em;
 }
+.rose-section-title {
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  color: var(--er-purple);
+}
+.rose-label {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--er-mauve);
+  display: block;
+  margin-bottom: 0.375rem;
+}
+.rose-body { font-size: 0.875rem; color: var(--er-dark); }
+.rose-muted { font-size: 0.8125rem; color: var(--er-mauve); }
 
+/* ══════════════════════════════════════════════════════════════
+   TAG / BADGE
+   ══════════════════════════════════════════════════════════════ */
 .rose-tag {
   display: inline-flex;
   align-items: center;
   padding: 0.25rem 0.875rem;
   border-radius: 9999px;
-  font-size: 0.8125rem;
+  font-size: 0.8rem;
   font-weight: 500;
-  background: var(--rose-light);
-  color: var(--rose-purple);
-  border: 1px solid var(--rose-primary);
+  background: var(--er-purple-tint);
+  color: var(--er-purple);
+  border: 1px solid rgba(142,69,133,0.2);
+}
+
+/* ══════════════════════════════════════════════════════════════
+   UPLOAD ZONE
+   ══════════════════════════════════════════════════════════════ */
+.upload-zone {
+  border: 2px dashed var(--er-rose);
+  border-radius: 1rem;
+  padding: 2rem 1.5rem;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.22s ease;
+  background: var(--er-rose-tint);
+  position: relative;
+  overflow: hidden;
+}
+.upload-zone::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(ellipse at center, rgba(220,161,161,0.12) 0%, transparent 70%);
+  pointer-events: none;
+}
+.upload-zone:hover {
+  border-color: var(--er-mauve);
+  background: var(--er-warm-tint);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 16px rgba(220,161,161,0.2);
+}
+.upload-zone.drag-over {
+  border-color: var(--er-purple);
+  background: var(--er-purple-tint);
+  box-shadow: 0 0 0 3px rgba(142,69,133,0.13), 0 4px 16px rgba(142,69,133,0.15);
+}
+.upload-zone.has-file {
+  border-color: var(--er-mauve);
+  background: var(--er-warm-tint);
+  border-style: solid;
+}
+
+/* ══════════════════════════════════════════════════════════════
+   NAVBAR
+   ══════════════════════════════════════════════════════════════ */
+.er-navbar {
+  background: linear-gradient(90deg, #ffffff 0%, var(--er-rose-tint) 100%);
+  border-bottom: 1px solid var(--er-border);
+  box-shadow: 0 1px 0 var(--er-border), 0 2px 8px rgba(220,161,161,0.08);
+}
+
+/* ══════════════════════════════════════════════════════════════
+   SIDEBAR
+   ══════════════════════════════════════════════════════════════ */
+.er-sidebar {
+  background: linear-gradient(180deg, #ffffff 0%, var(--er-rose-tint) 100%);
+  border-right: 1px solid var(--er-border);
+  box-shadow: 2px 0 16px rgba(142,69,133,0.07);
+}
+
+/* ══════════════════════════════════════════════════════════════
+   PAGE HEADER (gradient banner)
+   ══════════════════════════════════════════════════════════════ */
+.er-page-header {
+  background: linear-gradient(135deg, var(--er-purple) 0%, #b05ea8 50%, var(--er-mauve) 100%);
+  border-radius: 1.25rem;
+  padding: 1.75rem;
+  color: white;
+  box-shadow: 0 4px 20px rgba(142,69,133,0.3);
+}
+
+/* ══════════════════════════════════════════════════════════════
+   JOB CARD
+   ══════════════════════════════════════════════════════════════ */
+.er-job-card {
+  background: var(--er-surface);
+  border-radius: 1.125rem;
+  border: 1px solid var(--er-border);
+  padding: 1.25rem 1.5rem;
+  transition: all 0.2s ease;
+  box-shadow: 0 1px 3px rgba(142,69,133,0.04);
+}
+.er-job-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 16px rgba(142,69,133,0.1), 0 1px 3px rgba(220,161,161,0.15);
+  border-color: var(--er-rose);
+}
+
+/* ══════════════════════════════════════════════════════════════
+   MISC
+   ══════════════════════════════════════════════════════════════ */
+.er-divider {
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--er-border), transparent);
+  border: none;
+  margin: 0.75rem 0;
+}
+
+.er-source-badge {
+  font-size: 0.7rem;
+  padding: 0.2rem 0.6rem;
+  border-radius: 9999px;
+  background: var(--er-warm-tint);
+  color: var(--er-mauve);
+  border: 1px solid var(--er-border);
+  font-weight: 500;
 }
