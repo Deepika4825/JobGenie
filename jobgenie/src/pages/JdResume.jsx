@@ -77,8 +77,9 @@ export default function JdResume() {
   const [links,      setLinks]      = useState({ linkedin:'', github:'', leetcode:'', codechef:'', medium:'' });
   const [loading,    setLoading]    = useState(false);
   const [error,      setError]      = useState('');
-  const [pdfUrl,     setPdfUrl]     = useState('');
-  const [success,    setSuccess]    = useState(false);
+  const [pdfUrl,      setPdfUrl]      = useState('');
+  const [pdfFilename, setPdfFilename] = useState('jd_tailored_resume.pdf');
+  const [success,     setSuccess]     = useState(false);
   const pdfRef = useRef(null);
 
   const setLink = (k, v) => setLinks(l => ({ ...l, [k]: v }));
@@ -110,6 +111,11 @@ export default function JdResume() {
         throw new Error(e.error || 'Failed to generate resume');
       }
       const blob = await res.blob();
+      // Get filename from Content-Disposition header if available
+      const disposition = res.headers.get('Content-Disposition') || '';
+      const nameMatch   = disposition.match(/filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/);
+      const filename    = nameMatch ? nameMatch[1].replace(/['"]/g, '') : 'jd_tailored_resume.pdf';
+      setPdfFilename(filename);
       setPdfUrl(URL.createObjectURL(blob));
       setSuccess(true);
       setTimeout(() => pdfRef.current?.scrollIntoView({ behavior:'smooth' }), 100);
@@ -123,13 +129,13 @@ export default function JdResume() {
   const handleReset = () => {
     setResumeFile(null); setJdFile(null); setJdText('');
     setLinks({ linkedin:'', github:'', leetcode:'', codechef:'', medium:'' });
-    setPdfUrl(''); setSuccess(false); setError('');
+    setPdfUrl(''); setPdfFilename('jd_tailored_resume.pdf'); setSuccess(false); setError('');
   };
 
   const handleDownload = () => {
     if (!pdfUrl) return;
     const a = document.createElement('a');
-    a.href = pdfUrl; a.download = 'jd_tailored_resume.pdf'; a.click();
+    a.href = pdfUrl; a.download = pdfFilename; a.click();
   };
 
   const ILink = () => (

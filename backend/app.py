@@ -333,11 +333,35 @@ def generate_jd_resume_upload_route():
         pdf_bytes = generate_jd_resume_from_files(resume_file, jd_text, GROQ_API_KEY,
                                                     manual_links=manual_links)
         print(f"[JD Route] PDF generated: {len(pdf_bytes)} bytes")
+
+        # Extract name from the generated PDF data for the filename
+        # We re-read the first bytes to get the name from the structured data
+        # Simpler: parse name from the pdf bytes via a second extraction isn't ideal
+        # Instead return name via response header using the route's own extraction
+        # The name was already extracted inside generate_jd_resume_from_files
+        # For the filename, use a slug derived from what we know
+        name_slug = "resume"
+        try:
+            # Quick re-extract just the name from resume text for the filename
+            import PyPDF2 as _pypdf
+            resume_file.seek(0)
+            _reader = _pypdf.PdfReader(resume_file)
+            _first_page = (_reader.pages[0].extract_text() or "")[:300]
+            # Name is usually the first non-empty line
+            for _line in _first_page.split('\n'):
+                _line = _line.strip()
+                if len(_line) > 2 and len(_line) < 60 and not any(c.isdigit() for c in _line[:5]):
+                    name_slug = re.sub(r'\W+', '_', _line.strip().lower())[:30]
+                    break
+        except Exception:
+            pass
+
+        filename = f"{name_slug}_resume.pdf"
         return send_file(
             io.BytesIO(pdf_bytes),
             mimetype='application/pdf',
             as_attachment=False,
-            download_name="jd_tailored_resume.pdf"
+            download_name=filename
         )
     except ValueError as e:
         return jsonify({"error": str(e)}), 400
