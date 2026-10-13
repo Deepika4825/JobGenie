@@ -22,6 +22,7 @@ from reportlab.lib.units import inch
 from reportlab.lib import colors
 from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, HRFlowable
 from reportlab.lib.enums import TA_CENTER, TA_LEFT
+from reportlab.pdfbase import pdfmetrics
 
 _BLACK = colors.HexColor('#000000')
 _DARK  = colors.HexColor('#1a1a1a')
@@ -261,7 +262,15 @@ def _build_story(data: dict, st: dict) -> list:
     # Links — always show if present (from AI extraction OR manual override)
     links = [_san(p.get(k,'')) for k in ['linkedin','github','leetcode','codechef','medium'] if p.get(k,'').strip()]
     if links:
-        story.append(Paragraph('  |  '.join(links), st['contact']))
+        # Render each link as a clickable hyperlink
+        link_parts = []
+        for url in links:
+            if url:
+                # Ensure URL has protocol
+                href = url if url.startswith('http') else f'https://{url}'
+                link_parts.append(f'<a href="{href}" color="#0000EE"><u>{url}</u></a>')
+        if link_parts:
+            story.append(Paragraph('  |  '.join(link_parts), st['contact']))
 
     story.append(Spacer(1, 6))
 
@@ -399,9 +408,10 @@ def build_pdf(data: dict) -> bytes:
 # ─────────────────────────────────────────────────────────────────────────────
 
 def generate_jd_resume_from_files(resume_file, jd_text: str, groq_key: str,
-                                   manual_links: dict = None) -> bytes:
+                                   manual_links: dict = None):
     """
     Upload-based entry point.
+    Returns (pdf_bytes, candidate_name_slug)
     manual_links: dict of {linkedin, github, leetcode, codechef, medium}
                   entered by user in the frontend form (overrides AI extraction).
     """
@@ -420,7 +430,18 @@ def generate_jd_resume_from_files(resume_file, jd_text: str, groq_key: str,
             if val:
                 p[key] = val
 
-    return build_pdf(structured)
+    # Extract candidate name for the filename
+    full_name = _san(structured.get('personal', {}).get('fullName', ''))
+    if not full_name:
+        # Fallback: first non-blank short line from resume text
+        for line in resume_text.split('\n'):
+            line = line.strip()
+            if 3 < len(line) < 60 and not any(c.isdigit() for c in line[:4]):
+                full_name = line
+                break
+    name_slug = re.sub(r'\W+', '_', full_name.strip().lower())[:40] or 'resume'
+
+    return build_pdf(structured), name_slug
 
 
 def generate_jd_resume(data: dict, groq_key: str) -> bytes:

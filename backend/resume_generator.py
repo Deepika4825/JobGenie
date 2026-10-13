@@ -155,12 +155,13 @@ def build_resume(data: dict) -> bytes:
     if contact_parts:
         story.append(Paragraph('  |  '.join(contact_parts), styles['contact']))
 
-    # Links line: LinkedIn | GitHub | LeetCode | CodeChef | Medium
+    # Links line: LinkedIn | GitHub | LeetCode | CodeChef | Medium — clickable
     link_parts = []
     for key in ['linkedin', 'github', 'leetcode', 'codechef', 'medium']:
         val = sanitize(personal.get(key, ''))
         if val:
-            link_parts.append(val)
+            href = val if val.startswith('http') else f'https://{val}'
+            link_parts.append(f'<a href="{href}" color="#0000EE"><u>{val}</u></a>')
     if link_parts:
         story.append(Paragraph('  |  '.join(link_parts), styles['contact']))
 

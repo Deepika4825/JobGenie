@@ -111,10 +111,8 @@ export default function JdResume() {
         throw new Error(e.error || 'Failed to generate resume');
       }
       const blob = await res.blob();
-      // Get filename from Content-Disposition header if available
-      const disposition = res.headers.get('Content-Disposition') || '';
-      const nameMatch   = disposition.match(/filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/);
-      const filename    = nameMatch ? nameMatch[1].replace(/['"]/g, '') : 'jd_tailored_resume.pdf';
+      // Read candidate name from custom header set by backend
+      const filename = res.headers.get('X-Resume-Filename') || 'resume.pdf';
       setPdfFilename(filename);
       setPdfUrl(URL.createObjectURL(blob));
       setSuccess(true);

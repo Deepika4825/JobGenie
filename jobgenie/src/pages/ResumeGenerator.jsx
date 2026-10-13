@@ -140,20 +140,23 @@ export default function ResumeGenerator() {
         method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload),
       });
       if (!res.ok) { const e = await res.json().catch(() => ({})); throw new Error(e.error || 'Failed to generate resume'); }
-      const blob = await res.blob();
+      const blob     = await res.blob();
+      const filename = res.headers.get('X-Resume-Filename') || `${form.personal.fullName.trim().replace(/\s+/g,'_') || 'resume'}_resume.pdf`;
       setPdfUrl(URL.createObjectURL(blob));
+      // Store for download
+      window._freshResumeFilename = filename;
       setSuccess(true);
       setTimeout(() => pdfRef.current?.scrollIntoView({ behavior:'smooth' }), 100);
     } catch (e) { setError(e.message || 'Something went wrong.'); }
     finally { setLoading(false); }
   };
 
-  const handleReset    = () => { setForm(initialForm()); setPdfUrl(''); setSuccess(false); setError(''); };
+  const handleReset    = () => { setForm(initialForm()); setPdfUrl(''); setSuccess(false); setError(''); window._freshResumeFilename = null; };
   const handleDownload = () => {
     if (!pdfUrl) return;
     const a = document.createElement('a');
     a.href = pdfUrl;
-    a.download = `${form.personal.fullName.trim().replace(/\s+/g,'_') || 'resume'}_resume.pdf`;
+    a.download = window._freshResumeFilename || `${form.personal.fullName.trim().replace(/\s+/g,'_') || 'resume'}_resume.pdf`;
     a.click();
   };
 
