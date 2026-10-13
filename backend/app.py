@@ -321,9 +321,18 @@ def generate_jd_resume_upload_route():
         if not jd_text:
             return jsonify({"error": "Job description is required (upload a PDF or paste the text)"}), 400
 
-        pdf_bytes = generate_jd_resume_from_files(resume_file, jd_text, GROQ_API_KEY)
-        print(f"[JD Route] PDF generated: {len(pdf_bytes)} bytes")
+        # Optional manual link overrides from the form
+        manual_links = {
+            "linkedin": request.form.get("linkedin", "").strip(),
+            "github":   request.form.get("github",   "").strip(),
+            "leetcode": request.form.get("leetcode", "").strip(),
+            "codechef": request.form.get("codechef", "").strip(),
+            "medium":   request.form.get("medium",   "").strip(),
+        }
 
+        pdf_bytes = generate_jd_resume_from_files(resume_file, jd_text, GROQ_API_KEY,
+                                                    manual_links=manual_links)
+        print(f"[JD Route] PDF generated: {len(pdf_bytes)} bytes")
         return send_file(
             io.BytesIO(pdf_bytes),
             mimetype='application/pdf',

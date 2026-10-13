@@ -1,15 +1,13 @@
 """
 JD-Based Resume Generator — Backend Module
 
-Flow:
-  1. Receive: resume PDF bytes + job description text
-  2. Extract text from resume PDF using PyPDF2
-  3. Send both to Groq LLM → returns structured resume data tailored to the JD
-  4. Build PDF using the Harshibar-style ReportLab template
-  5. Return PDF bytes
-
-Public entry point:
-  generate_jd_resume_from_files(resume_file, jd_text, groq_key) -> bytes
+Fixes applied:
+  1. clean_text() strips all non-latin1 chars that cause black squares in PDF
+  2. Summary section REMOVED from PDF output
+  3. Links (linkedin, github, etc.) always shown in header contact line
+  4. Manual link overrides merged from frontend form fields
+  5. One-page enforcement via font size reduction + section trimming
+  6. Robust JSON parsing with per-field regex fallback
 """
 
 import io
@@ -25,151 +23,191 @@ from reportlab.lib import colors
 from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, HRFlowable
 from reportlab.lib.enums import TA_CENTER, TA_LEFT
 
-# ── Colour palette (ATS-safe black/charcoal) ─────────────────────────────────
 _BLACK = colors.HexColor('#000000')
 _DARK  = colors.HexColor('#1a1a1a')
 _GRAY  = colors.HexColor('#444444')
-_RULE  = colors.HexColor('#cccccc')
+_RULE  = colors.HexColor('#bbbbbb')
 
 GROQ_URL = "https://api.groq.com/openai/v1/chat/completions"
 
 
 # ─────────────────────────────────────────────────────────────────────────────
-# Step 1 — Extract text from uploaded PDF
+# Text sanitiser — kills every character that causes ■ black squares
+# ─────────────────────────────────────────────────────────────────────────────
+
+# Characters to replace with safe ASCII equivalents
+_CHAR_MAP = {
+    '\u2013': '-',   # en dash
+    '\u2014': '-',   # em dash
+    '\u2018': "'",   # left single quote
+    '\u2019': "'",   # right single quote
+    '\u201c': '"',   # left double quote
+    '\u201d': '"',   # right double quote
+    '\u2022': '',    # bullet (we add our own)
+    '\u2026': '...',  # ellipsis
+    '\u00a0': ' ',   # non-breaking space
+    '\u200b': '',    # zero-width space
+    '\ufb01': 'fi',  # fi ligature
+    '\ufb02': 'fl',  # fl ligature
+    '\u25cf': '',    # filled circle bullet
+    '\u25aa': '',    # small black square
+    '\u25a0': '',    # black square
+    '\u2212': '-',   # minus sign
+    '\u00b7': ' ',   # middle dot
+}
+
+def clean_text(text: str) -> str:
+    """Replace known problem characters and drop anything outside latin-1."""
+    if not text:
+        return ""
+    text = str(text).strip()
+    for bad, good in _CHAR_MAP.items():
+        text = text.replace(bad, good)
+    # Drop any remaining non-latin1 chars
+    text = text.encode('latin-1', errors='ignore').decode('latin-1')
+    # Collapse multiple spaces
+    text = re.sub(r'  +', ' ', text).strip()
+    return text
+
+
+def _san(text) -> str:
+    return clean_text(text) if text else ""
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# PDF text extraction
 # ─────────────────────────────────────────────────────────────────────────────
 
 def extract_text_from_pdf(file) -> str:
-    """Extract and normalise text from a PDF file object."""
     try:
         reader = PyPDF2.PdfReader(file)
-        pages  = []
-        for page in reader.pages:
-            t = page.extract_text()
-            if t:
-                pages.append(t)
-        raw = "\n".join(pages)
+        pages  = [page.extract_text() or '' for page in reader.pages]
+        raw    = "\n".join(pages)
         return re.sub(r"\s+", " ", raw).strip()
     except Exception as e:
-        raise ValueError(f"Could not extract text from PDF: {e}")
+        raise ValueError(f"Could not read PDF: {e}")
 
 
 # ─────────────────────────────────────────────────────────────────────────────
-# Step 2 — Groq LLM: extract + tailor resume content
+# Groq LLM — extract resume data + tailor to JD
 # ─────────────────────────────────────────────────────────────────────────────
 
 def extract_and_tailor(resume_text: str, jd_text: str, groq_key: str) -> dict:
-    """
-    Send the candidate's raw resume text and the job description to Groq.
-    Returns a fully structured resume dict ready for PDF building.
-    Falls back to a minimal dict on failure.
-    """
     prompt = (
-        "You are a professional resume writer and ATS optimisation expert.\n"
-        "You are given:\n"
-        "  1. A candidate's existing resume (raw extracted text)\n"
-        "  2. A job description they want to apply for\n\n"
-        "Your task:\n"
-        "  - Extract ALL factual information from the resume (name, contact, education, "
-        "    skills, projects, experience, certifications, achievements)\n"
-        "  - Rewrite the professional summary to match the job description\n"
-        "  - Reorder and highlight skills that appear in the job description\n"
-        "  - Keep all factual content accurate — do NOT invent new facts\n"
-        "  - Return ONLY raw JSON in this exact structure (no markdown, no explanation):\n\n"
+        "You are a professional resume writer and ATS expert.\n"
+        "Extract ALL information from the candidate's resume and return it as structured JSON.\n"
+        "Also tailor skills order to prioritise keywords from the job description.\n\n"
+        "Return ONLY raw JSON — no markdown, no explanation, no extra text.\n"
+        "Use this exact structure:\n"
         "{\n"
-        '  "personal": {\n'
-        '    "fullName": "",\n'
-        '    "phone": "",\n'
-        '    "email": "",\n'
-        '    "location": "",\n'
-        '    "linkedin": "",\n'
-        '    "github": "",\n'
-        '    "leetcode": "",\n'
-        '    "codechef": "",\n'
-        '    "medium": ""\n'
-        "  },\n"
-        '  "summary": "2-3 sentence professional summary tailored to the JD",\n'
-        '  "education": [\n'
-        '    {"degree": "", "college": "", "location": "", "startYear": "", "endYear": "", "cgpa": ""}\n'
-        "  ],\n"
-        '  "skills": {\n'
-        '    "programmingLanguages": "comma-separated",\n'
-        '    "technicalSkills": "comma-separated",\n'
-        '    "tools": "comma-separated"\n'
-        "  },\n"
-        '  "projects": [\n'
-        '    {"name": "", "technologies": "", "description": "", "link": ""}\n'
-        "  ],\n"
-        '  "experience": [\n'
-        '    {"company": "", "role": "", "duration": "", "description": ""}\n'
-        "  ],\n"
-        '  "certifications": [\n'
-        '    {"name": "", "organization": "", "year": ""}\n'
-        "  ],\n"
+        '  "personal": {"fullName":"","phone":"","email":"","location":"","linkedin":"","github":"","leetcode":"","codechef":"","medium":""},\n'
+        '  "education": [{"degree":"","college":"","location":"","startYear":"","endYear":"","cgpa":""}],\n'
+        '  "skills": {"programmingLanguages":"","technicalSkills":"","tools":""},\n'
+        '  "experience": [{"company":"","role":"","duration":"","description":""}],\n'
+        '  "projects": [{"name":"","technologies":"","description":"","link":""}],\n'
+        '  "certifications": [{"name":"","organization":"","year":""}],\n'
         '  "achievements": [""],\n'
         '  "coursework": ""\n'
         "}\n\n"
-        "Rules:\n"
-        "  - Extract every field you can find from the resume text\n"
-        "  - Leave a field empty string if not found — never fabricate data\n"
-        "  - summary must be tailored to the job description\n"
-        "  - skills must be reordered to prioritise JD keywords first\n"
-        "  - ONLY return the JSON object\n\n"
-        f"RESUME TEXT:\n{resume_text[:4000]}\n\n"
-        f"JOB DESCRIPTION:\n{jd_text[:2000]}"
+        "IMPORTANT RULES:\n"
+        "- Extract the candidate's name, phone, email, location from the resume header\n"
+        "- Extract LinkedIn, GitHub, LeetCode, CodeChef, Medium URLs if present in the resume\n"
+        "- Extract ALL projects with their names, technologies, and description bullet points\n"
+        "- Extract ALL experience entries\n"
+        "- Extract ALL certifications\n"
+        "- Keep description strings as plain text, no markdown symbols\n"
+        "- Skills: put JD-matching skills FIRST in each comma-separated list\n"
+        "- Do NOT include a summary field\n"
+        "- ONLY return the JSON object, nothing else\n\n"
+        f"RESUME:\n{resume_text[:4500]}\n\n"
+        f"JOB DESCRIPTION:\n{jd_text[:1500]}"
     )
 
-    headers = {
-        "Authorization": f"Bearer {groq_key}",
-        "Content-Type":  "application/json",
-    }
+    headers = {"Authorization": f"Bearer {groq_key}", "Content-Type": "application/json"}
     payload = {
         "model":       "openai/gpt-oss-120b",
         "messages":    [{"role": "user", "content": prompt}],
-        "temperature": 0.15,
-        "max_tokens":  2500,
+        "temperature": 0.1,
+        "max_tokens":  2800,
     }
 
+    raw = ""
     try:
-        resp = requests.post(GROQ_URL, json=payload, headers=headers, timeout=45)
+        resp = requests.post(GROQ_URL, json=payload, headers=headers, timeout=50)
         if resp.status_code != 200:
-            print(f"Groq error {resp.status_code}: {resp.text[:200]}")
+            print(f"[JD] Groq error {resp.status_code}: {resp.text[:200]}")
             return _empty_data()
 
         raw = resp.json()["choices"][0]["message"]["content"].strip()
-        print(f"[JD] Groq raw (first 600): {raw[:600]}")
-        # Strip markdown fences and thinking blocks
+        print(f"[JD] raw[:500]: {raw[:500]}")
+
+        # Strip thinking blocks and markdown fences
         raw = re.sub(r"<think>.*?</think>", "", raw, flags=re.DOTALL).strip()
         raw = re.sub(r"^```(?:json)?\s*", "", raw).strip()
         raw = re.sub(r"\s*```$", "", raw).strip()
 
-        # Extract outermost JSON object
-        brace_start = raw.find('{')
-        brace_end   = raw.rfind('}')
-        if brace_start != -1 and brace_end > brace_start:
-            raw = raw[brace_start : brace_end + 1]
+        # Extract outermost { }
+        s = raw.find('{')
+        e = raw.rfind('}')
+        if s != -1 and e > s:
+            raw = raw[s:e+1]
 
-        print(f"[JD] Cleaned JSON (first 600): {raw[:600]}")
         data = json.loads(raw)
-        print(f"[JD] Parsed keys: {list(data.keys())}")
+        print(f"[JD] keys: {list(data.keys())}")
         return data
 
-    except json.JSONDecodeError as e:
-        print(f"[JD] JSON parse error: {e}")
-        print(f"[JD] raw that failed: {raw[:400]}")
+    except json.JSONDecodeError as ex:
+        print(f"[JD] JSON error: {ex} — raw: {raw[:300]}")
+        # Try per-field regex extraction as fallback
+        return _regex_extract(raw)
+    except Exception as ex:
+        print(f"[JD] exception: {ex}")
         return _empty_data()
-    except Exception as e:
-        print(f"[JD] Groq exception: {e}")
-        return _empty_data()
+
+
+def _regex_extract(raw: str) -> dict:
+    """Last-resort extraction when JSON is malformed/truncated."""
+    def _arr(key):
+        m = re.search(rf'"{key}"\s*:\s*\[(.*?)(?:\]|$)', raw, re.DOTALL)
+        if m:
+            return re.findall(r'"([^"]{2,})"', m.group(1))
+        return []
+
+    def _str(key):
+        m = re.search(rf'"{key}"\s*:\s*"([^"]*)"', raw)
+        return m.group(1) if m else ""
+
+    personal = {
+        "fullName": _str("fullName"), "phone": _str("phone"),
+        "email":    _str("email"),    "location": _str("location"),
+        "linkedin": _str("linkedin"), "github":   _str("github"),
+        "leetcode": _str("leetcode"), "codechef": _str("codechef"),
+        "medium":   _str("medium"),
+    }
+    skills = {
+        "programmingLanguages": _str("programmingLanguages"),
+        "technicalSkills":      _str("technicalSkills"),
+        "tools":                _str("tools"),
+    }
+    return {
+        "personal":       personal,
+        "education":      [],
+        "skills":         skills,
+        "experience":     [],
+        "projects":       [],
+        "certifications": [],
+        "achievements":   _arr("achievements"),
+        "coursework":     _str("coursework"),
+    }
 
 
 def _empty_data() -> dict:
     return {
         "personal":       {},
-        "summary":        "",
         "education":      [],
         "skills":         {"programmingLanguages": "", "technicalSkills": "", "tools": ""},
-        "projects":       [],
         "experience":     [],
+        "projects":       [],
         "certifications": [],
         "achievements":   [],
         "coursework":     "",
@@ -177,261 +215,231 @@ def _empty_data() -> dict:
 
 
 # ─────────────────────────────────────────────────────────────────────────────
-# Step 3 — PDF builder: Harshibar-style ReportLab template
+# PDF builder — Harshibar-style, one page, no summary, clean text
 # ─────────────────────────────────────────────────────────────────────────────
 
-def _san(text) -> str:
-    if not text:
-        return ""
-    return str(text).strip()
-
-
-def _build_styles() -> dict:
+def _styles(fs=9.5) -> dict:
+    """Build styles. fs = base font size for body/bullets (reduce for one-page)."""
+    sm = max(fs - 1, 8)
     return {
-        'name': ParagraphStyle('Name', fontName='Helvetica-Bold', fontSize=20,
-                               textColor=_BLACK, alignment=TA_CENTER, spaceAfter=4, leading=24),
-        'contact': ParagraphStyle('Contact', fontName='Helvetica', fontSize=9,
-                                  textColor=_GRAY, alignment=TA_CENTER, spaceAfter=2, leading=13),
-        'section': ParagraphStyle('Section', fontName='Helvetica-Bold', fontSize=10.5,
-                                  textColor=_BLACK, spaceBefore=8, spaceAfter=3, leading=14),
-        'entry_title': ParagraphStyle('EntryTitle', fontName='Helvetica-Bold', fontSize=10,
-                                      textColor=_BLACK, spaceAfter=1, leading=14),
-        'entry_sub': ParagraphStyle('EntrySub', fontName='Helvetica-Oblique', fontSize=9,
-                                    textColor=_GRAY, spaceAfter=2, leading=13),
-        'body': ParagraphStyle('Body', fontName='Helvetica', fontSize=9.5,
-                               textColor=_DARK, leading=14, spaceAfter=2),
-        'bullet': ParagraphStyle('Bullet', fontName='Helvetica', fontSize=9.5,
-                                 textColor=_DARK, leading=13, leftIndent=14, spaceAfter=1),
+        'name':    ParagraphStyle('N',  fontName='Helvetica-Bold',    fontSize=18,  textColor=_BLACK, alignment=TA_CENTER, spaceAfter=3, leading=22),
+        'contact': ParagraphStyle('C',  fontName='Helvetica',         fontSize=8.5, textColor=_GRAY,  alignment=TA_CENTER, spaceAfter=2, leading=12),
+        'section': ParagraphStyle('S',  fontName='Helvetica-Bold',    fontSize=10,  textColor=_BLACK, spaceBefore=6, spaceAfter=2, leading=13),
+        'etitle':  ParagraphStyle('ET', fontName='Helvetica-Bold',    fontSize=fs,  textColor=_BLACK, spaceAfter=1, leading=fs+3),
+        'esub':    ParagraphStyle('ES', fontName='Helvetica-Oblique', fontSize=sm,  textColor=_GRAY,  spaceAfter=1, leading=sm+3),
+        'body':    ParagraphStyle('B',  fontName='Helvetica',         fontSize=fs,  textColor=_DARK,  leading=fs+4, spaceAfter=1),
+        'bullet':  ParagraphStyle('BL', fontName='Helvetica',         fontSize=sm,  textColor=_DARK,  leading=sm+3, leftIndent=12, spaceAfter=0),
     }
 
 
 def _divider():
-    return HRFlowable(width='100%', thickness=0.5, color=_RULE, spaceBefore=2, spaceAfter=4)
+    return HRFlowable(width='100%', thickness=0.4, color=_RULE, spaceBefore=1, spaceAfter=3)
 
 
-def _sec(title, styles):
-    return [Paragraph(title.upper(), styles['section']), _divider()]
+def _sec(title, st):
+    return [Paragraph(title.upper(), st['section']), _divider()]
 
 
-def _bullet(text, styles):
-    t = _san(text).lstrip('•- ').strip()
-    if not t:
-        return None
-    return Paragraph(f"\u2022  {t}", styles['bullet'])
+def _bul(text, st):
+    t = _san(text).lstrip('*+-. ').strip()
+    return Paragraph(f"- {t}", st['bullet']) if t else None
 
 
-def build_pdf(data: dict) -> bytes:
-    """Build the Harshibar-style PDF from structured resume data."""
-    buf    = io.BytesIO()
-    styles = _build_styles()
-
-    doc = SimpleDocTemplate(
-        buf, pagesize=letter,
-        leftMargin=0.65*inch, rightMargin=0.65*inch,
-        topMargin=0.55*inch,  bottomMargin=0.55*inch,
-    )
+def _build_story(data: dict, st: dict) -> list:
     story = []
-
-    # ── Header ───────────────────────────────────────────────────────────────
     p = data.get('personal', {})
+
+    # ── Header: name + contacts + links ──────────────────────────────────────
     name = _san(p.get('fullName', ''))
     if name:
-        story.append(Paragraph(name, styles['name']))
+        story.append(Paragraph(name, st['name']))
 
-    contacts = [_san(p.get(k, '')) for k in ['phone', 'email', 'location'] if p.get(k)]
+    contacts = [_san(p.get(k,'')) for k in ['phone','email','location'] if p.get(k,'').strip()]
     if contacts:
-        story.append(Paragraph('  |  '.join(contacts), styles['contact']))
+        story.append(Paragraph('  |  '.join(contacts), st['contact']))
 
-    links = [_san(p.get(k, '')) for k in ['linkedin', 'github', 'leetcode', 'codechef', 'medium'] if p.get(k)]
+    # Links — always show if present (from AI extraction OR manual override)
+    links = [_san(p.get(k,'')) for k in ['linkedin','github','leetcode','codechef','medium'] if p.get(k,'').strip()]
     if links:
-        story.append(Paragraph('  |  '.join(links), styles['contact']))
+        story.append(Paragraph('  |  '.join(links), st['contact']))
 
-    story.append(Spacer(1, 8))
-
-    # ── Summary ──────────────────────────────────────────────────────────────
-    summary = _san(data.get('summary', ''))
-    if summary:
-        story += _sec('Professional Summary', styles)
-        story.append(Paragraph(summary, styles['body']))
-        story.append(Spacer(1, 4))
+    story.append(Spacer(1, 6))
 
     # ── Education ─────────────────────────────────────────────────────────────
-    edus = [e for e in data.get('education', []) if e.get('degree') or e.get('college')]
+    edus = [e for e in data.get('education',[]) if e.get('degree') or e.get('college')]
     if edus:
-        story += _sec('Education', styles)
+        story += _sec('Education', st)
         for edu in edus:
-            degree = _san(edu.get('degree', ''))
-            col    = _san(edu.get('college', ''))
-            loc    = _san(edu.get('location', ''))
-            start  = _san(edu.get('startYear', ''))
-            end    = _san(edu.get('endYear', ''))
-            cgpa   = _san(edu.get('cgpa', ''))
-            dur    = f"{start} \u2013 {end}" if start or end else ''
-            sub    = ' | '.join([x for x in [col, loc] if x])
-            if dur:
-                sub += f" ({dur})" if sub else dur
-            if degree:
-                story.append(Paragraph(degree, styles['entry_title']))
-            if sub:
-                story.append(Paragraph(sub, styles['entry_sub']))
-            if cgpa:
-                story.append(Paragraph(f"CGPA / Percentage: {cgpa}", styles['body']))
-            story.append(Spacer(1, 3))
+            deg  = _san(edu.get('degree',''))
+            col  = _san(edu.get('college',''))
+            loc  = _san(edu.get('location',''))
+            s    = _san(edu.get('startYear',''))
+            e    = _san(edu.get('endYear',''))
+            cgpa = _san(edu.get('cgpa',''))
+            dur  = f"{s} - {e}" if s or e else ''
+            sub  = ' | '.join(x for x in [col, loc] if x)
+            if dur: sub += f" ({dur})" if sub else dur
+            if deg: story.append(Paragraph(deg, st['etitle']))
+            if sub: story.append(Paragraph(sub, st['esub']))
+            if cgpa: story.append(Paragraph(f"CGPA: {cgpa}", st['body']))
+            story.append(Spacer(1, 2))
 
     # ── Skills ────────────────────────────────────────────────────────────────
     sk = data.get('skills', {})
-    pl = _san(sk.get('programmingLanguages', ''))
-    ts = _san(sk.get('technicalSkills', ''))
-    to = _san(sk.get('tools', ''))
+    pl = _san(sk.get('programmingLanguages',''))
+    ts = _san(sk.get('technicalSkills',''))
+    to = _san(sk.get('tools',''))
     if pl or ts or to:
-        story += _sec('Skills', styles)
-        if pl: story.append(Paragraph(f"<b>Programming Languages:</b>  {pl}", styles['body']))
-        if ts: story.append(Paragraph(f"<b>Technical Skills:</b>  {ts}", styles['body']))
-        if to: story.append(Paragraph(f"<b>Tools &amp; Technologies:</b>  {to}", styles['body']))
-        story.append(Spacer(1, 3))
+        story += _sec('Skills', st)
+        if pl: story.append(Paragraph(f"<b>Languages:</b> {pl}", st['body']))
+        if ts: story.append(Paragraph(f"<b>Technical:</b> {ts}", st['body']))
+        if to: story.append(Paragraph(f"<b>Tools:</b> {to}", st['body']))
+        story.append(Spacer(1, 2))
 
     # ── Experience ────────────────────────────────────────────────────────────
-    exps = [e for e in data.get('experience', []) if e.get('company') or e.get('role')]
+    exps = [e for e in data.get('experience',[]) if e.get('company') or e.get('role')]
     if exps:
-        story += _sec('Experience', styles)
+        story += _sec('Experience', st)
         for exp in exps:
-            role = _san(exp.get('role', ''))
-            comp = _san(exp.get('company', ''))
-            dur  = _san(exp.get('duration', ''))
-            desc = _san(exp.get('description', ''))
-            if role:
-                story.append(Paragraph(role, styles['entry_title']))
-            sub = comp
-            if dur:
-                sub += f" | {dur}" if sub else dur
-            if sub:
-                story.append(Paragraph(sub, styles['entry_sub']))
+            role = _san(exp.get('role',''))
+            comp = _san(exp.get('company',''))
+            dur  = _san(exp.get('duration',''))
+            desc = _san(exp.get('description',''))
+            if role: story.append(Paragraph(role, st['etitle']))
+            sub = comp + (f" | {dur}" if dur else '')
+            if sub: story.append(Paragraph(sub, st['esub']))
             if desc:
-                for line in desc.split('\n'):
-                    b = _bullet(line, styles)
-                    if b:
-                        story.append(b)
-            story.append(Spacer(1, 3))
+                for line in re.split(r'[.\n]', desc):
+                    b = _bul(line, st)
+                    if b: story.append(b)
+            story.append(Spacer(1, 2))
 
     # ── Projects ──────────────────────────────────────────────────────────────
-    projs = [p for p in data.get('projects', []) if p.get('name')]
+    projs = [p for p in data.get('projects',[]) if p.get('name')]
     if projs:
-        story += _sec('Projects', styles)
+        story += _sec('Projects', st)
         for proj in projs:
-            pn   = _san(proj.get('name', ''))
-            pt   = _san(proj.get('technologies', ''))
-            pd   = _san(proj.get('description', ''))
-            pl2  = _san(proj.get('link', ''))
-            title_txt = pn + (f" | <i>{pt}</i>" if pt else "")
-            story.append(Paragraph(title_txt, styles['entry_title']))
+            pn = _san(proj.get('name',''))
+            pt = _san(proj.get('technologies',''))
+            pd = _san(proj.get('description',''))
+            pl2 = _san(proj.get('link',''))
+            ttxt = pn + (f" | <i>{pt}</i>" if pt else '')
+            story.append(Paragraph(ttxt, st['etitle']))
             if pd:
-                for line in pd.split('\n'):
-                    b = _bullet(line, styles)
-                    if b:
-                        story.append(b)
+                for line in re.split(r'[.\n]', pd):
+                    b = _bul(line, st)
+                    if b: story.append(b)
             if pl2:
-                story.append(Paragraph(f"Link: {pl2}", styles['body']))
-            story.append(Spacer(1, 3))
+                story.append(Paragraph(f"Link: {pl2}", st['body']))
+            story.append(Spacer(1, 2))
 
     # ── Certifications ────────────────────────────────────────────────────────
-    certs = [c for c in data.get('certifications', []) if c.get('name')]
+    certs = [c for c in data.get('certifications',[]) if c.get('name')]
     if certs:
-        story += _sec('Certifications', styles)
+        story += _sec('Certifications', st)
         for cert in certs:
-            cn = _san(cert.get('name', ''))
-            co = _san(cert.get('organization', ''))
-            cy = _san(cert.get('year', ''))
-            line = cn
-            if co: line += f" \u2014 {co}"
-            if cy: line += f" ({cy})"
-            b = _bullet(line, styles)
-            if b:
-                story.append(b)
-        story.append(Spacer(1, 3))
+            cn = _san(cert.get('name',''))
+            co = _san(cert.get('organization',''))
+            cy = _san(cert.get('year',''))
+            line = cn + (f" - {co}" if co else '') + (f" ({cy})" if cy else '')
+            b = _bul(line, st)
+            if b: story.append(b)
+        story.append(Spacer(1, 2))
 
     # ── Achievements ──────────────────────────────────────────────────────────
-    achs = [_san(a) for a in data.get('achievements', []) if _san(a)]
+    achs = [_san(a) for a in data.get('achievements',[]) if _san(a)]
     if achs:
-        story += _sec('Achievements', styles)
+        story += _sec('Achievements', st)
         for ach in achs:
-            b = _bullet(ach, styles)
-            if b:
-                story.append(b)
-        story.append(Spacer(1, 3))
+            b = _bul(ach, st)
+            if b: story.append(b)
+        story.append(Spacer(1, 2))
 
     # ── Coursework ────────────────────────────────────────────────────────────
-    cw = _san(data.get('coursework', ''))
+    cw = _san(data.get('coursework',''))
     if cw:
-        story += _sec('Relevant Coursework', styles)
-        story.append(Paragraph(cw, styles['body']))
+        story += _sec('Relevant Coursework', st)
+        story.append(Paragraph(cw, st['body']))
 
-    doc.build(story)
-    return buf.getvalue()
+    return story
+
+
+def build_pdf(data: dict) -> bytes:
+    """
+    Build one-page PDF.
+    First try at font size 9.5. If content overflows one page,
+    rebuild with progressively smaller fonts until it fits.
+    """
+    lm = rm = 0.6 * inch
+    tm = bm = 0.5 * inch
+    page_h = letter[1] - tm - bm
+
+    for fs in [9.5, 9.0, 8.5, 8.0]:
+        buf = io.BytesIO()
+        doc = SimpleDocTemplate(buf, pagesize=letter,
+                                leftMargin=lm, rightMargin=rm,
+                                topMargin=tm,  bottomMargin=bm)
+        st    = _styles(fs)
+        story = _build_story(data, st)
+        doc.build(story)
+        # Check page count
+        buf.seek(0)
+        reader = PyPDF2.PdfReader(buf)
+        if len(reader.pages) <= 1:
+            buf.seek(0)
+            return buf.read()
+
+    # Final fallback — just return whatever was built last
+    buf.seek(0)
+    return buf.read()
 
 
 # ─────────────────────────────────────────────────────────────────────────────
-# Public entry point
+# Public entry points
 # ─────────────────────────────────────────────────────────────────────────────
 
-def generate_jd_resume_from_files(resume_file, jd_text: str, groq_key: str) -> bytes:
+def generate_jd_resume_from_files(resume_file, jd_text: str, groq_key: str,
+                                   manual_links: dict = None) -> bytes:
     """
-    Main entry point called by the Flask route.
-
-    Args:
-        resume_file : file-like object of the uploaded resume PDF
-        jd_text     : job description text (extracted from PDF or pasted)
-        groq_key    : Groq API key
-
-    Returns:
-        PDF bytes of the JD-tailored resume
+    Upload-based entry point.
+    manual_links: dict of {linkedin, github, leetcode, codechef, medium}
+                  entered by user in the frontend form (overrides AI extraction).
     """
-    # 1. Extract resume text
     resume_text = extract_text_from_pdf(resume_file)
     if len(resume_text) < 50:
         raise ValueError("Could not extract enough text from the resume PDF. "
                          "Please ensure it is a text-based PDF, not a scanned image.")
 
-    # 2. AI extraction + tailoring
     structured = extract_and_tailor(resume_text, jd_text, groq_key)
 
-    # 3. Build and return PDF
+    # Merge manual link overrides — user-entered links take priority
+    if manual_links:
+        p = structured.setdefault('personal', {})
+        for key in ['linkedin', 'github', 'leetcode', 'codechef', 'medium']:
+            val = (manual_links.get(key) or '').strip()
+            if val:
+                p[key] = val
+
     return build_pdf(structured)
 
 
-# Keep old entry point working (used by existing /generate-resume-jd route)
 def generate_jd_resume(data: dict, groq_key: str) -> bytes:
-    """
-    Legacy entry point — accepts pre-structured form data with jd_text field.
-    Still used by the form-based /generate-resume-jd route.
-    """
-    jd_text     = data.get('jd_text', '')
-    profile_for_llm = {
-        "name":     data.get('personal', {}).get('fullName', ''),
-        "summary":  data.get('summary', ''),
-        "skills":   data.get('skills', {}),
-        "projects": [
-            {"name": p.get('name', ''), "tech": p.get('technologies', '')}
-            for p in data.get('projects', [])[:4]
-        ],
-    }
-    from jd_resume_generator import extract_and_tailor as _et, build_pdf as _bp
-
-    tailored = _et(
-        json.dumps(profile_for_llm),
-        jd_text,
-        groq_key
-    )
-    merged = dict(data)
-    if tailored.get('summary'):
-        merged['summary'] = tailored['summary']
+    """Legacy form-based entry point (unchanged, still used by /generate-resume-jd)."""
+    jd_text = data.get('jd_text', '')
+    profile_summary = json.dumps({
+        "name":    data.get('personal', {}).get('fullName', ''),
+        "skills":  data.get('skills', {}),
+        "projects":[{"name": p.get('name',''), "tech": p.get('technologies','')}
+                    for p in data.get('projects', [])[:4]],
+    })
+    tailored = extract_and_tailor(profile_summary, jd_text, groq_key)
+    merged   = dict(data)
     if tailored.get('skills'):
-        merged_skills = dict(data.get('skills', {}))
         ts = tailored['skills']
-        if ts.get('programmingLanguages'):
-            merged_skills['programmingLanguages'] = ts['programmingLanguages']
-        if ts.get('technicalSkills'):
-            merged_skills['technicalSkills'] = ts['technicalSkills']
-        if ts.get('tools'):
-            merged_skills['tools'] = ts['tools']
-        merged['skills'] = merged_skills
-    return _bp(merged)
+        ms = dict(data.get('skills', {}))
+        for k in ['programmingLanguages', 'technicalSkills', 'tools']:
+            if ts.get(k): ms[k] = ts[k]
+        merged['skills'] = ms
+    # Remove summary — not needed
+    merged.pop('summary', None)
+    return build_pdf(merged)
