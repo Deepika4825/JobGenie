@@ -10,6 +10,7 @@ import Jobs from './pages/Jobs';
 import Profile from './pages/Profile';
 import ProfileSetup from './pages/ProfileSetup';
 import ResumeGenerator from './pages/ResumeGenerator';
+import JdResume from './pages/JdResume';
 
 function isLoggedIn() {
   try {
@@ -50,6 +51,7 @@ export default function App() {
               <Route path="/analyze"          element={<PrivateRoute><Analyze /></PrivateRoute>} />
               <Route path="/jobs"             element={<PrivateRoute><Jobs /></PrivateRoute>} />
               <Route path="/resume-generator" element={<PrivateRoute><ResumeGenerator /></PrivateRoute>} />
+              <Route path="/jd-resume"        element={<PrivateRoute><JdResume /></PrivateRoute>} />
               <Route path="/profile"          element={<PrivateRoute><Profile /></PrivateRoute>} />
               <Route path="/setup"            element={<PrivateRoute><ProfileSetup /></PrivateRoute>} />
               <Route path="/dashboard" element={<Navigate to="/analyze" replace />} />

@@ -8,6 +8,7 @@ const TITLES = {
   '/analyze':          'Resume Analysis',
   '/jobs':             'Job Recommendations',
   '/resume-generator': 'Resume Generator',
+  '/jd-resume':        'JD Resume Generator',
   '/profile':          'My Profile',
   '/setup':            'Profile Setup',
 };

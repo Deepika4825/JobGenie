@@ -7,6 +7,7 @@ const NAV = [
   { to: '/analyze',          icon: '📊', label: 'Resume Analysis' },
   { to: '/jobs',             icon: '💼', label: 'Job Recommendations' },
   { to: '/resume-generator', icon: '📄', label: 'Resume Generator' },
+  { to: '/jd-resume',        icon: '🎯', label: 'JD Resume Generator' },
 ];
 
 export default function Sidebar({ open, onClose }) {
