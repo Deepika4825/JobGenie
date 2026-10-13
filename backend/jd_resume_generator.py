@@ -126,7 +126,7 @@ def extract_and_tailor(resume_text: str, jd_text: str, groq_key: str) -> dict:
         "model":       "openai/gpt-oss-120b",
         "messages":    [{"role": "user", "content": prompt}],
         "temperature": 0.15,
-        "max_tokens":  1500,
+        "max_tokens":  2500,
     }
 
     try:
@@ -136,24 +136,29 @@ def extract_and_tailor(resume_text: str, jd_text: str, groq_key: str) -> dict:
             return _empty_data()
 
         raw = resp.json()["choices"][0]["message"]["content"].strip()
+        print(f"[JD] Groq raw (first 600): {raw[:600]}")
         # Strip markdown fences and thinking blocks
         raw = re.sub(r"<think>.*?</think>", "", raw, flags=re.DOTALL).strip()
         raw = re.sub(r"^```(?:json)?\s*", "", raw).strip()
         raw = re.sub(r"\s*```$", "", raw).strip()
 
-        # Extract JSON object robustly
-        match = re.search(r'\{.*\}', raw, re.DOTALL)
-        if match:
-            raw = match.group(0)
+        # Extract outermost JSON object
+        brace_start = raw.find('{')
+        brace_end   = raw.rfind('}')
+        if brace_start != -1 and brace_end > brace_start:
+            raw = raw[brace_start : brace_end + 1]
 
+        print(f"[JD] Cleaned JSON (first 600): {raw[:600]}")
         data = json.loads(raw)
+        print(f"[JD] Parsed keys: {list(data.keys())}")
         return data
 
     except json.JSONDecodeError as e:
-        print(f"JSON parse error: {e} — raw[:300]: {raw[:300]}")
+        print(f"[JD] JSON parse error: {e}")
+        print(f"[JD] raw that failed: {raw[:400]}")
         return _empty_data()
     except Exception as e:
-        print(f"Groq exception: {e}")
+        print(f"[JD] Groq exception: {e}")
         return _empty_data()
 
 

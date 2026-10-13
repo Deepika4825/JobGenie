@@ -322,6 +322,7 @@ def generate_jd_resume_upload_route():
             return jsonify({"error": "Job description is required (upload a PDF or paste the text)"}), 400
 
         pdf_bytes = generate_jd_resume_from_files(resume_file, jd_text, GROQ_API_KEY)
+        print(f"[JD Route] PDF generated: {len(pdf_bytes)} bytes")
 
         return send_file(
             io.BytesIO(pdf_bytes),
