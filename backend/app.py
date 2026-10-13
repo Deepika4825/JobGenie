@@ -288,5 +288,89 @@ def generate_resume_route():
         return jsonify({"error": "Failed to generate resume"}), 500
 
 
+@app.route("/generate-resume-jd-upload", methods=["POST"])
+def generate_jd_resume_upload_route():
+    """
+    Upload-based JD Resume Generator endpoint.
+    Accepts:
+      - resume_pdf  : the candidate's existing resume (PDF file upload)
+      - jd_pdf      : the job description as a PDF (optional file upload)
+      - jd_text     : the job description as plain text (optional form field)
+    Returns a JD-tailored PDF resume.
+    """
+    try:
+        from jd_resume_generator import generate_jd_resume_from_files
+
+        if "resume_pdf" not in request.files:
+            return jsonify({"error": "resume_pdf file is required"}), 400
+
+        resume_file = request.files["resume_pdf"]
+        if not resume_file.filename.lower().endswith(".pdf"):
+            return jsonify({"error": "Resume must be a PDF file"}), 400
+
+        # JD can come as a PDF upload or as plain text
+        jd_text = ""
+        if "jd_pdf" in request.files and request.files["jd_pdf"].filename:
+            jd_file = request.files["jd_pdf"]
+            if not jd_file.filename.lower().endswith(".pdf"):
+                return jsonify({"error": "Job description must be a PDF file"}), 400
+            jd_text = extract_pdf(jd_file)
+        else:
+            jd_text = (request.form.get("jd_text") or "").strip()
+
+        if not jd_text:
+            return jsonify({"error": "Job description is required (upload a PDF or paste the text)"}), 400
+
+        pdf_bytes = generate_jd_resume_from_files(resume_file, jd_text, GROQ_API_KEY)
+
+        return send_file(
+            io.BytesIO(pdf_bytes),
+            mimetype='application/pdf',
+            as_attachment=False,
+            download_name="jd_tailored_resume.pdf"
+        )
+    except ValueError as e:
+        return jsonify({"error": str(e)}), 400
+    except Exception:
+        print(traceback.format_exc())
+        return jsonify({"error": "Failed to generate resume. Please try again."}), 500
+
+
+@app.route("/generate-resume-jd", methods=["POST"])
+def generate_jd_resume_route():
+    """
+    JD-Based Resume Generator endpoint.
+    Accepts JSON with resume data + jd_text, returns a tailored PDF.
+    Completely separate from /generate-resume (Fresher Generator).
+    """
+    try:
+        from jd_resume_generator import generate_jd_resume
+        data = request.get_json()
+        if not data:
+            return jsonify({"error": "No data provided"}), 400
+
+        personal = data.get("personal", {})
+        if not personal.get("fullName", "").strip():
+            return jsonify({"error": "Full name is required"}), 400
+        if not personal.get("email", "").strip():
+            return jsonify({"error": "Email is required"}), 400
+        if not data.get("jd_text", "").strip():
+            return jsonify({"error": "Job description is required"}), 400
+
+        pdf_bytes = generate_jd_resume(data, GROQ_API_KEY)
+        name_slug = re.sub(r'\W+', '_', personal.get("fullName", "resume").strip().lower())
+        filename  = f"{name_slug}_jd_resume.pdf"
+
+        return send_file(
+            io.BytesIO(pdf_bytes),
+            mimetype='application/pdf',
+            as_attachment=False,
+            download_name=filename
+        )
+    except Exception:
+        print(traceback.format_exc())
+        return jsonify({"error": "Failed to generate JD resume"}), 500
+
+
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 8000)), debug=False)
