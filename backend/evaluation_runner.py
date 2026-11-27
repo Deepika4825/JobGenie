@@ -40,7 +40,6 @@ import glob
 from datetime import datetime
 from pathlib import Path
 
-# Add backend dir to path so imports work when run directly
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 from dotenv import load_dotenv
@@ -53,6 +52,13 @@ from jd_resume_generator import (
     extract_and_tailor,
 )
 from fabrication_validator import validate_resume
+
+# Delay between pairs to avoid rate limiting (seconds)
+INTER_PAIR_DELAY = 12
+
+# Retry settings
+MAX_RETRIES   = 3
+RETRY_BACKOFF = [15, 30, 60]  # seconds to wait before each retry
 
 
 # ─── Keyword matching ────────────────────────────────────────────────────────
@@ -123,9 +129,42 @@ def structured_to_text(data: dict) -> str:
 
 # ─── Single pair evaluation ──────────────────────────────────────────────────
 
+def _tailor_with_retry(original_text: str, jd_text: str) -> dict:
+    """
+    Call extract_and_tailor with retry + backoff on rate-limit or empty result.
+    Returns structured dict, or raises RuntimeError after all retries exhausted.
+    """
+    for attempt in range(MAX_RETRIES):
+        result = extract_and_tailor(original_text, jd_text, GROQ_API_KEY)
+
+        # Detect silent failure: LLM returned empty data
+        has_content = (
+            result.get("personal", {}).get("fullName", "").strip() or
+            result.get("education") or
+            result.get("skills", {}).get("programmingLanguages", "").strip() or
+            result.get("projects") or
+            result.get("experience")
+        )
+
+        if has_content:
+            return result
+
+        # Empty result — likely rate-limited or truncated response
+        wait = RETRY_BACKOFF[attempt] if attempt < len(RETRY_BACKOFF) else 60
+        print(f"\n    [empty result — attempt {attempt+1}/{MAX_RETRIES}] "
+              f"waiting {wait}s before retry...", end=" ", flush=True)
+        time.sleep(wait)
+
+    raise RuntimeError(
+        f"LLM returned empty data after {MAX_RETRIES} attempts. "
+        "Likely rate-limited or Groq API issue."
+    )
+
+
 def evaluate_pair(test_id: str, resume_path: str, jd_text: str) -> dict:
     """
     Run the full pipeline for one resume–JD pair and return metrics.
+    Marks as error if total_bullets == 0 (silent LLM failure).
     """
     result = {
         "test_id":              test_id,
@@ -151,40 +190,37 @@ def evaluate_pair(test_id: str, resume_path: str, jd_text: str) -> dict:
     try:
         t0 = time.time()
 
-        # 1. Extract original resume text
         with open(resume_path, 'rb') as f:
             original_text = extract_text_from_pdf(f)
 
-        # 2. Extract JD keywords
         jd_keywords = extract_jd_keywords(jd_text)
-        result["jd_keyword_count"] = len(jd_keywords)
+        result["jd_keyword_count"]      = len(jd_keywords)
+        result["keyword_match_before"]  = keyword_match_score(original_text, jd_keywords)
 
-        # 3. Keyword match BEFORE tailoring
-        result["keyword_match_before"] = keyword_match_score(original_text, jd_keywords)
+        # Tailoring with retry + empty-result detection
+        generated_data = _tailor_with_retry(original_text, jd_text)
 
-        # 4. Run AI tailoring
-        with open(resume_path, 'rb') as f:
-            generated_data = extract_and_tailor(original_text, jd_text, GROQ_API_KEY)
-
-        # 5. Keyword match AFTER tailoring
         generated_text = structured_to_text(generated_data)
         result["keyword_match_after"] = keyword_match_score(generated_text, jd_keywords)
         result["keyword_match_gain"]  = round(
             result["keyword_match_after"] - result["keyword_match_before"], 3
         )
 
-        # 6. Fabrication validation
         val = validate_resume(original_text, generated_data, groq_key="", use_llm=False)
         result["total_bullets"]    = val["total_bullets"]
         result["verified_bullets"] = val["verified_bullets"]
         result["flagged_bullets"]  = val["flagged_bullets"]
         result["flag_rate"]        = val["flag_rate"]
         result["validation_summary"] = val["summary"]
+        result["processing_time_s"]  = round(time.time() - t0, 2)
 
-        result["processing_time_s"] = round(time.time() - t0, 2)
+        # Explicit error if still no bullets after retries
+        if val["total_bullets"] == 0:
+            result["error"] = "LLM produced no bullet content after retries"
 
     except Exception as e:
         result["error"] = str(e)
+        result["processing_time_s"] = round(time.time() - t0, 2) if 't0' in dir() else None
 
     return result
 
@@ -243,8 +279,20 @@ def run_evaluation():
                 )
             test_id += 1
 
+            # Rate-limit protection: pause between pairs
+            remaining = len(resume_files) * len(jd_files) - (test_id - 1)
+            if remaining > 0:
+                print(f"    [rate-limit delay: {INTER_PAIR_DELAY}s]", end="\r", flush=True)
+                time.sleep(INTER_PAIR_DELAY)
+
+    if errored:
+        print(f"\n  Errored pairs ({len(errored)}):")
+        for r in errored:
+            print(f"    [{r['test_id']}] {r['resume_file']}: {r['error']}")
+
     # Aggregate metrics
-    valid = [r for r in all_results if not r.get("error")]
+    valid   = [r for r in all_results if not r.get("error")]
+    errored = [r for r in all_results if r.get("error")]
     if valid:
         avg_gain      = sum(r["keyword_match_gain"] for r in valid) / len(valid)
         avg_flag_rate = sum(r["flag_rate"] for r in valid) / len(valid)
@@ -268,7 +316,7 @@ def run_evaluation():
         json.dump({
             "timestamp": ts,
             "pairs_evaluated": len(valid),
-            "pairs_errored": len(all_results) - len(valid),
+            "pairs_errored": len(errored),
             "aggregate": {
                 "avg_keyword_match_gain": round(avg_gain, 4) if valid else None,
                 "avg_flag_rate":          round(avg_flag_rate, 4) if valid else None,

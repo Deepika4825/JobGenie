@@ -361,6 +361,11 @@ def generate_jd_resume_upload_route():
         pdf_bytes, name_slug = generate_jd_resume_from_files(
             resume_file, jd_text, GROQ_API_KEY, manual_links=manual_links
         )
+
+        # Guard: if PDF is suspiciously small it means LLM returned empty data
+        if len(pdf_bytes) < 1500:
+            return jsonify({"error": "Resume generation failed: could not extract sufficient content from your resume. Please ensure your PDF is text-based and try again."}), 500
+
         filename = f"{name_slug}_resume.pdf"
         print(f"[JD Route] PDF generated: {len(pdf_bytes)} bytes, filename: {filename}")
 
