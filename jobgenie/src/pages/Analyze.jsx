@@ -3,6 +3,7 @@ import { useProfile } from '../context/ProfileContext';
 import { useNavigate } from 'react-router-dom';
 import UploadSection from '../components/UploadSection';
 import ScoreCard from '../components/ScoreCard';
+import PrivacyBanner from '../components/PrivacyBanner';
 
 export default function Analyze() {
   const { data, loading, analyzed, analyze, error } = useResume();
@@ -13,6 +14,8 @@ export default function Analyze() {
 
   return (
     <div style={{ maxWidth:'900px', margin:'0 auto', display:'flex', flexDirection:'column', gap:'1.5rem' }}>
+
+      <PrivacyBanner />
 
       {profileIncomplete && (
         <div style={{ background:'rgba(142,69,133,0.06)', border:'1px solid rgba(142,69,133,0.2)', borderRadius:'16px', padding:'1rem 1.25rem', display:'flex', alignItems:'center', justifyContent:'space-between', gap:'1rem', flexWrap:'wrap' }}>

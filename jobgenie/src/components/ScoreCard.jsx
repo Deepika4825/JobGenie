@@ -13,7 +13,8 @@ export default function ScoreCard({ score }) {
             <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
           </svg>
         </div>
-        <h2 style={{ fontSize:'0.9375rem', fontWeight:700, color:'var(--rose-dark)' }}>ATS Score</h2>
+        <h2 style={{ fontSize:'0.9375rem', fontWeight:700, color:'var(--rose-dark)' }}>AI Resume Quality Score</h2>
+        <span style={{ fontSize:'0.65rem', color:'var(--rose-secondary)', fontWeight:400, marginLeft:'4px' }}>(LLM-generated)</span>
       </div>
       <div style={{ display:'flex', flexDirection:'column', alignItems:'center', marginBottom:'1.25rem' }}>
         <div style={{ position:'relative', width:'144px', height:'144px' }}>

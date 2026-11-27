@@ -3,6 +3,7 @@
  * User uploads resume PDF + JD PDF/text → AI extracts + tailors → downloads PDF
  */
 import { useState, useRef } from 'react';
+import PrivacyBanner from '../components/PrivacyBanner';
 
 const API = import.meta.env.VITE_API_URL || 'http://localhost:8000';
 
@@ -146,7 +147,7 @@ export default function JdResume() {
   return (
     <div style={{ maxWidth:'860px', margin:'0 auto', display:'flex', flexDirection:'column', gap:'1.5rem', paddingBottom:'3rem' }}>
 
-      {/* Header */}
+      {/* Page Header */}
       <div className="er-page-header">
         <div style={{ display:'flex', alignItems:'center', gap:'1rem' }}>
           <div style={{ width:'52px', height:'52px', borderRadius:'14px', background:'rgba(255,255,255,0.18)', display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0 }}>
@@ -162,6 +163,8 @@ export default function JdResume() {
           </div>
         </div>
       </div>
+
+      <PrivacyBanner />
 
       {/* Steps */}
       <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr 1fr', gap:'1rem' }}>

@@ -1,5 +1,6 @@
 ﻿import json, re, traceback, sqlite3, hashlib, os
 import requests
+import bcrypt
 from datetime import datetime, timezone
 from flask import Flask, request, jsonify, g, send_file
 from flask_cors import CORS
@@ -39,7 +40,25 @@ def close_db(e=None):
     if db: db.close()
 
 def hash_pw(pw):
-    return hashlib.sha256(pw.encode()).hexdigest()
+    """Hash password with bcrypt (new users). Returns bcrypt hash string."""
+    return bcrypt.hashpw(pw.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
+
+def verify_pw(pw, stored_hash):
+    """
+    Backward-compatible password verification.
+    Supports both legacy unsalted SHA-256 hashes and new bcrypt hashes.
+    If a legacy SHA-256 match is found, the password is transparently
+    re-hashed with bcrypt and the record is updated.
+    """
+    # Detect bcrypt hash (starts with $2b$ or $2a$)
+    if stored_hash.startswith('$2b$') or stored_hash.startswith('$2a$'):
+        try:
+            return bcrypt.checkpw(pw.encode('utf-8'), stored_hash.encode('utf-8'))
+        except Exception:
+            return False
+    else:
+        # Legacy SHA-256 path
+        return stored_hash == hashlib.sha256(pw.encode()).hexdigest()
 
 
 @app.route("/admin/users", methods=["GET"])
@@ -82,9 +101,14 @@ def login():
     if not email or not pw:
         return jsonify({"error": "Email and password required"}), 400
     db = get_db()
-    user = db.execute("SELECT * FROM users WHERE email=? AND password=?", (email, hash_pw(pw))).fetchone()
-    if not user:
+    user = db.execute("SELECT * FROM users WHERE email=?", (email,)).fetchone()
+    if not user or not verify_pw(pw, user["password"]):
         return jsonify({"error": "Invalid email or password"}), 401
+    # Transparently upgrade legacy SHA-256 hash to bcrypt
+    if not (user["password"].startswith('$2b$') or user["password"].startswith('$2a$')):
+        new_hash = hash_pw(pw)
+        db.execute("UPDATE users SET password=? WHERE id=?", (new_hash, user["id"]))
+        db.commit()
     db.execute("INSERT OR IGNORE INTO profiles (user_id) VALUES (?)", (user["id"],))
     db.commit()
     return jsonify({"id": user["id"], "name": user["name"], "username": user["username"], "email": user["email"]}), 200
@@ -117,7 +141,8 @@ def extract_pdf(file):
     return re.sub(r"\s+", " ", text).strip()
 
 def ask_groq(text):
-    prompt = "Analyze this resume. Return ONLY raw JSON, no markdown, no extra text.\nFormat:\n{\"skills\":[],\"job_titles\":[],\"skill_gaps\":[],\"resume_score\":75,\"suggestions\":[]}\nRules:\n- resume_score 0-100 integer\n- skills: max 8 items\n- job_titles: max 3 items\n- skill_gaps: max 5 items\n- suggestions: max 3 short items\n- ONLY return the JSON object, nothing else\nResume:\n" + text[:2000]
+    # Use up to 3500 chars (reviewer improvement: was 2000)
+    prompt = "Analyze this resume. Return ONLY raw JSON, no markdown, no extra text.\nFormat:\n{\"skills\":[],\"job_titles\":[],\"skill_gaps\":[],\"resume_score\":75,\"suggestions\":[]}\nRules:\n- resume_score 0-100 integer (AI-generated quality score, not validated against a commercial ATS)\n- skills: max 8 items\n- job_titles: max 3 items\n- skill_gaps: max 5 items\n- suggestions: max 3 short items\n- ONLY return the JSON object, nothing else\nResume:\n" + text[:3500]
     headers = {"Authorization": f"Bearer {GROQ_API_KEY}", "Content-Type": "application/json"}
     payload = {"model": "openai/gpt-oss-120b", "messages": [{"role": "user", "content": prompt}], "temperature": 0.1, "max_tokens": 600}
     resp = requests.post(GROQ_URL, json=payload, headers=headers, timeout=30)
@@ -338,14 +363,33 @@ def generate_jd_resume_upload_route():
         )
         filename = f"{name_slug}_resume.pdf"
         print(f"[JD Route] PDF generated: {len(pdf_bytes)} bytes, filename: {filename}")
+
+        # Reviewer improvement: run fabrication validation and expose summary header
+        try:
+            from fabrication_validator import validate_resume as _val_resume
+            from jd_resume_generator import extract_text_from_pdf as _epdf, extract_and_tailor as _etailor
+            resume_file.seek(0)
+            _orig_text = _epdf(resume_file)
+            _gen_data  = _etailor(_orig_text, jd_text, GROQ_API_KEY)
+            _val       = _val_resume(_orig_text, _gen_data, groq_key="", use_llm=False)
+            val_summary = (f"bullets={_val['total_bullets']},"
+                           f"verified={_val['verified_bullets']},"
+                           f"flagged={_val['flagged_bullets']},"
+                           f"flag_rate={_val['flag_rate']}")
+            print(f"[JD Validation] {val_summary}")
+        except Exception as _ve:
+            val_summary = f"validation_error={str(_ve)[:60]}"
+            print(f"[JD Validation] Error: {_ve}")
+
         resp = send_file(
             io.BytesIO(pdf_bytes),
             mimetype='application/pdf',
             as_attachment=False,
             download_name=filename
         )
-        resp.headers['X-Resume-Filename'] = filename
-        resp.headers['Access-Control-Expose-Headers'] = 'X-Resume-Filename, Content-Disposition'
+        resp.headers['X-Resume-Filename']       = filename
+        resp.headers['X-Validation-Summary']    = val_summary
+        resp.headers['Access-Control-Expose-Headers'] = 'X-Resume-Filename, X-Validation-Summary, Content-Disposition'
         return resp
     except ValueError as e:
         return jsonify({"error": str(e)}), 400
