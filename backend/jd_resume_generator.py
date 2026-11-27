@@ -77,8 +77,12 @@ def _san(text) -> str:
     t = clean_text(text) if text else ""
     # Remove # completely (causes "non-hexadecimal digit" in ReportLab XML parser)
     t = t.replace('#', '')
-    # Escape &, <, > for XML safety (ReportLab parses paragraph text as XML)
-    t = _xml_escape(t)
+    # Also remove other chars that break ReportLab XML: < > & when not part of tags
+    # Use a simple approach: strip everything that could be misinterpreted
+    # Replace & with 'and', < with '(', > with ')'
+    t = t.replace('&', ' and ')
+    t = t.replace('<', '(')
+    t = t.replace('>', ')')
     return t
 
 

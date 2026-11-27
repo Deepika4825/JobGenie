@@ -26,14 +26,16 @@ DIVIDER  = colors.HexColor('#cccccc')
 
 
 def sanitize(text: str) -> str:
-    """Sanitize text for ReportLab — escape XML special chars, remove # for hex safety."""
+    """Sanitize text for ReportLab — remove all chars that break XML parsing."""
     if not text:
         return ""
     t = str(text).strip()
-    # Remove # (causes non-hexadecimal digit error in ReportLab XML parser)
+    # Remove # (causes non-hexadecimal digit error)
     t = t.replace('#', '')
-    # Escape &, <, > for XML safety
-    t = _xml_escape(t)
+    # Replace XML special chars with safe equivalents (not escaping — replacing)
+    t = t.replace('&', ' and ')
+    t = t.replace('<', '(')
+    t = t.replace('>', ')')
     return t
 
 
@@ -219,7 +221,7 @@ def build_resume(data: dict) -> bytes:
         if tech_skills:
             story.append(Paragraph(f"<b>Technical Skills:</b>  {tech_skills}", styles['body']))
         if tools:
-            story.append(Paragraph(f"<b>Tools &amp; Technologies:</b>  {tools}", styles['body']))
+            story.append(Paragraph(f"<b>Tools and Technologies:</b>  {tools}", styles['body']))
         story.append(Spacer(1, 3))
 
     # ── Projects ──────────────────────────────────────────────────────────────
