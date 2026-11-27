@@ -351,6 +351,8 @@ def generate_jd_resume_upload_route():
 
         # Optional manual link overrides from the form
         manual_links = {
+            "email":    request.form.get("email",    "").strip(),
+            "phone":    request.form.get("phone",    "").strip(),
             "linkedin": request.form.get("linkedin", "").strip(),
             "github":   request.form.get("github",   "").strip(),
             "leetcode": request.form.get("leetcode", "").strip(),

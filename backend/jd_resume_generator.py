@@ -429,7 +429,7 @@ def generate_jd_resume_from_files(resume_file, jd_text: str, groq_key: str,
     # Merge manual link overrides — user-entered links take priority
     if manual_links:
         p = structured.setdefault('personal', {})
-        for key in ['linkedin', 'github', 'leetcode', 'codechef', 'medium']:
+        for key in ['email', 'phone', 'linkedin', 'github', 'leetcode', 'codechef', 'medium']:
             val = (manual_links.get(key) or '').strip()
             if val:
                 p[key] = val

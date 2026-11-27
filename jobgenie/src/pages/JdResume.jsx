@@ -75,7 +75,7 @@ export default function JdResume() {
   const [jdFile,     setJdFile]     = useState(null);
   const [jdText,     setJdText]     = useState('');
   const [jdMode,     setJdMode]     = useState('upload');
-  const [links,      setLinks]      = useState({ linkedin:'', github:'', leetcode:'', codechef:'', medium:'' });
+  const [links,      setLinks]      = useState({ email:'', phone:'', linkedin:'', github:'', leetcode:'', codechef:'', medium:'' });
   const [loading,    setLoading]    = useState(false);
   const [error,      setError]      = useState('');
   const [pdfUrl,      setPdfUrl]      = useState('');
@@ -127,7 +127,7 @@ export default function JdResume() {
 
   const handleReset = () => {
     setResumeFile(null); setJdFile(null); setJdText('');
-    setLinks({ linkedin:'', github:'', leetcode:'', codechef:'', medium:'' });
+    setLinks({ email:'', phone:'', linkedin:'', github:'', leetcode:'', codechef:'', medium:'' });
     setPdfUrl(''); setPdfFilename('jd_tailored_resume.pdf'); setSuccess(false); setError('');
   };
 
@@ -261,15 +261,17 @@ export default function JdResume() {
         </div>
         <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:'1rem' }}>
           {[
-            ['linkedin', 'LinkedIn URL', 'linkedin.com/in/yourprofile'],
-            ['github',   'GitHub URL',   'github.com/yourusername'],
-            ['leetcode', 'LeetCode URL', 'leetcode.com/yourprofile'],
-            ['codechef', 'CodeChef URL', 'codechef.com/users/yourusername'],
-            ['medium',   'Medium URL',   'medium.com/@yourprofile'],
-          ].map(([key, label, ph]) => (
+            ['email',    'Email Address',  'your@email.com',                  'email'],
+            ['phone',    'Phone Number',   '+91 9876543210',                  'tel'],
+            ['linkedin', 'LinkedIn URL',   'linkedin.com/in/yourprofile',     'text'],
+            ['github',   'GitHub URL',     'github.com/yourusername',         'text'],
+            ['leetcode', 'LeetCode URL',   'leetcode.com/yourprofile',        'text'],
+            ['codechef', 'CodeChef URL',   'codechef.com/users/yourusername', 'text'],
+            ['medium',   'Medium URL',     'medium.com/@yourprofile',         'text'],
+          ].map(([key, label, ph, type]) => (
             <div key={key} style={{ display:'flex', flexDirection:'column', gap:'0.375rem' }}>
               <label style={{ fontSize:'0.72rem', fontWeight:600, color:'var(--rose-secondary)' }}>{label}</label>
-              <input value={links[key]} onChange={e => setLink(key, e.target.value)}
+              <input type={type} value={links[key]} onChange={e => setLink(key, e.target.value)}
                 placeholder={ph} className="rose-input" />
             </div>
           ))}
