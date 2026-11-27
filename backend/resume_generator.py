@@ -26,17 +26,17 @@ DIVIDER  = colors.HexColor('#cccccc')
 
 
 def sanitize(text: str) -> str:
-    """Sanitize text for ReportLab — remove all chars that break XML parsing."""
+    """Sanitize text to be completely safe for ReportLab paragraphs."""
     if not text:
         return ""
     t = str(text).strip()
-    # Remove # (causes non-hexadecimal digit error)
+    # Strip to pure ASCII — kills every special char that could break ReportLab XML
+    t = t.encode('ascii', errors='ignore').decode('ascii')
+    # Remove # (non-hexadecimal digit error)
     t = t.replace('#', '')
-    # Replace XML special chars with safe equivalents (not escaping — replacing)
-    t = t.replace('&', ' and ')
-    t = t.replace('<', '(')
-    t = t.replace('>', ')')
-    return t
+    # Remove XML-unsafe characters
+    t = t.replace('&', ' and ').replace('<', '(').replace('>', ')')
+    return t.strip()
 
 
 # ─── Style factory ────────────────────────────────────────────────────────────

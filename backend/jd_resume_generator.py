@@ -73,17 +73,15 @@ def clean_text(text: str) -> str:
 
 
 def _san(text) -> str:
-    """Clean text and escape ALL XML special characters for ReportLab paragraphs."""
+    """Clean text to be completely safe for ReportLab paragraphs."""
     t = clean_text(text) if text else ""
-    # Remove # completely (causes "non-hexadecimal digit" in ReportLab XML parser)
+    # Strip to pure ASCII — kills every special char that could break ReportLab XML
+    t = t.encode('ascii', errors='ignore').decode('ascii')
+    # Remove # (non-hexadecimal digit error)
     t = t.replace('#', '')
-    # Also remove other chars that break ReportLab XML: < > & when not part of tags
-    # Use a simple approach: strip everything that could be misinterpreted
-    # Replace & with 'and', < with '(', > with ')'
-    t = t.replace('&', ' and ')
-    t = t.replace('<', '(')
-    t = t.replace('>', ')')
-    return t
+    # Remove any remaining XML-unsafe characters
+    t = t.replace('&', ' and ').replace('<', '(').replace('>', ')')
+    return t.strip()
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -254,9 +252,29 @@ def _sec(title, st):
     return [Paragraph(title.upper(), st['section']), _divider()]
 
 
+def _p(text, style):
+    """Safe Paragraph wrapper — strips problematic chars and catches errors."""
+    # Final safety: encode to ASCII and back
+    safe = text.encode('ascii', errors='ignore').decode('ascii')
+    safe = safe.replace('#', '').replace('&', ' and ').replace('<', '(').replace('>', ')')
+    try:
+        return Paragraph(safe, style)
+    except Exception as e:
+        print(f"[PDF] Paragraph error text={safe!r[:80]}: {e}")
+        # Last resort: strip everything non-alphanumeric except spaces and punctuation
+        fallback = ''.join(c if c.isalnum() or c in ' .,;:()-|/' else ' ' for c in safe)
+        return Paragraph(fallback, style)
+
+
 def _bul(text, st):
     t = _san(text).lstrip('*+-. ').strip()
-    return Paragraph(f"- {t}", st['bullet']) if t else None
+    if not t:
+        return None
+    try:
+        return Paragraph('- ' + t, st['bullet'])
+    except Exception as e:
+        print(f"[PDF] bullet error on text={t!r}: {e}")
+        return None
 
 
 def _build_story(data: dict, st: dict) -> list:
@@ -266,17 +284,15 @@ def _build_story(data: dict, st: dict) -> list:
     # ── Header: name + contacts + links ──────────────────────────────────────
     name = _san(p.get('fullName', ''))
     if name:
-        story.append(Paragraph(name, st['name']))
+        story.append(_p(name, st['name']))
 
     contacts = [_san(p.get(k,'')) for k in ['phone','email','location'] if p.get(k,'').strip()]
     if contacts:
-        story.append(Paragraph('  |  '.join(contacts), st['contact']))
+        story.append(_p('  |  '.join(contacts), st['contact']))
 
-    # Links — always show if present (from AI extraction OR manual override)
     links = [_san(p.get(k,'')) for k in ['linkedin','github','leetcode','codechef','medium'] if p.get(k,'').strip()]
     if links:
-        # Render as plain text (clickable hyperlinks cause hex color errors in some ReportLab versions)
-        story.append(Paragraph('  |  '.join(links), st['contact']))
+        story.append(_p('  |  '.join(links), st['contact']))
 
     story.append(Spacer(1, 6))
 
@@ -294,9 +310,9 @@ def _build_story(data: dict, st: dict) -> list:
             dur  = f"{s} - {e}" if s or e else ''
             sub  = ' | '.join(x for x in [col, loc] if x)
             if dur: sub += f" ({dur})" if sub else dur
-            if deg: story.append(Paragraph(deg, st['etitle']))
-            if sub: story.append(Paragraph(sub, st['esub']))
-            if cgpa: story.append(Paragraph(f"CGPA: {cgpa}", st['body']))
+            if deg: story.append(_p(deg, st['etitle']))
+            if sub: story.append(_p(sub, st['esub']))
+            if cgpa: story.append(_p('CGPA: ' + cgpa, st['body']))
             story.append(Spacer(1, 2))
 
     # ── Skills ────────────────────────────────────────────────────────────────
@@ -307,11 +323,11 @@ def _build_story(data: dict, st: dict) -> list:
     if pl or ts or to:
         story += _sec('Skills', st)
         if pl:
-            story.append(Paragraph('Languages: ' + pl, st['body_bold']))
+            story.append(_p('Languages: ' + pl, st['body_bold']))
         if ts:
-            story.append(Paragraph('Technical: ' + ts, st['body_bold']))
+            story.append(_p('Technical: ' + ts, st['body_bold']))
         if to:
-            story.append(Paragraph('Tools: ' + to, st['body_bold']))
+            story.append(_p('Tools: ' + to, st['body_bold']))
         story.append(Spacer(1, 2))
 
     # ── Experience ────────────────────────────────────────────────────────────
@@ -323,9 +339,9 @@ def _build_story(data: dict, st: dict) -> list:
             comp = _san(exp.get('company',''))
             dur  = _san(exp.get('duration',''))
             desc = _san(exp.get('description',''))
-            if role: story.append(Paragraph(role, st['etitle']))
-            sub = comp + (f" | {dur}" if dur else '')
-            if sub: story.append(Paragraph(sub, st['esub']))
+            if role: story.append(_p(role, st['etitle']))
+            sub = comp + (' | ' + dur if dur else '')
+            if sub: story.append(_p(sub, st['esub']))
             if desc:
                 for line in re.split(r'[.\n]', desc):
                     b = _bul(line, st)
@@ -342,13 +358,13 @@ def _build_story(data: dict, st: dict) -> list:
             pd = _san(proj.get('description',''))
             pl2 = _san(proj.get('link',''))
             ttxt = pn + (' | ' + pt if pt else '')
-            story.append(Paragraph(ttxt, st['etitle']))
+            story.append(_p(ttxt, st['etitle']))
             if pd:
                 for line in re.split(r'[.\n]', pd):
                     b = _bul(line, st)
                     if b: story.append(b)
             if pl2:
-                story.append(Paragraph(f"Link: {pl2}", st['body']))
+                story.append(_p('Link: ' + pl2, st['body']))
             story.append(Spacer(1, 2))
 
     # ── Certifications ────────────────────────────────────────────────────────
