@@ -261,7 +261,7 @@ def _p(text, style):
     try:
         return Paragraph(safe, style)
     except Exception as e:
-        print(f"[PDF] Paragraph error text={safe!r[:80]}: {e}")
+        print(f"[PDF] Paragraph error text={repr(safe)[:80]}: {e}")
         # Last resort: strip everything non-alphanumeric except spaces and punctuation
         fallback = ''.join(c if c.isalnum() or c in ' .,;:()-|/' else ' ' for c in safe)
         return Paragraph(fallback, style)
@@ -274,7 +274,7 @@ def _bul(text, st):
     try:
         return Paragraph('- ' + t, st['bullet'])
     except Exception as e:
-        print(f"[PDF] bullet error on text={t!r}: {e}")
+        print(f"[PDF] bullet error on text={repr(t)[:60]}: {e}")
         return None
 
 
