@@ -217,11 +217,11 @@ def build_resume(data: dict) -> bytes:
     if prog_langs or tech_skills or tools:
         story += _section_header('Skills', styles)
         if prog_langs:
-            story.append(Paragraph(f"<b>Programming Languages:</b>  {prog_langs}", styles['body']))
+            story.append(Paragraph("Programming Languages: " + prog_langs, styles['body']))
         if tech_skills:
-            story.append(Paragraph(f"<b>Technical Skills:</b>  {tech_skills}", styles['body']))
+            story.append(Paragraph("Technical Skills: " + tech_skills, styles['body']))
         if tools:
-            story.append(Paragraph(f"<b>Tools and Technologies:</b>  {tools}", styles['body']))
+            story.append(Paragraph("Tools and Technologies: " + tools, styles['body']))
         story.append(Spacer(1, 3))
 
     # ── Projects ──────────────────────────────────────────────────────────────
@@ -236,7 +236,7 @@ def build_resume(data: dict) -> bytes:
 
             title_text = p_name
             if p_tech:
-                title_text += f" | <i>{p_tech}</i>"
+                title_text += " | " + p_tech
             story.append(Paragraph(title_text, styles['entry_title']))
 
             if p_desc:

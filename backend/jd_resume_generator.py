@@ -234,13 +234,15 @@ def _styles(fs=9.5) -> dict:
     """Build styles. fs = base font size for body/bullets (reduce for one-page)."""
     sm = max(fs - 1, 8)
     return {
-        'name':    ParagraphStyle('N',  fontName='Helvetica-Bold',    fontSize=18,  textColor=_BLACK, alignment=TA_CENTER, spaceAfter=3, leading=22),
-        'contact': ParagraphStyle('C',  fontName='Helvetica',         fontSize=8.5, textColor=_GRAY,  alignment=TA_CENTER, spaceAfter=2, leading=12),
-        'section': ParagraphStyle('S',  fontName='Helvetica-Bold',    fontSize=10,  textColor=_BLACK, spaceBefore=6, spaceAfter=2, leading=13),
-        'etitle':  ParagraphStyle('ET', fontName='Helvetica-Bold',    fontSize=fs,  textColor=_BLACK, spaceAfter=1, leading=fs+3),
-        'esub':    ParagraphStyle('ES', fontName='Helvetica-Oblique', fontSize=sm,  textColor=_GRAY,  spaceAfter=1, leading=sm+3),
-        'body':    ParagraphStyle('B',  fontName='Helvetica',         fontSize=fs,  textColor=_DARK,  leading=fs+4, spaceAfter=1),
-        'bullet':  ParagraphStyle('BL', fontName='Helvetica',         fontSize=sm,  textColor=_DARK,  leading=sm+3, leftIndent=12, spaceAfter=0),
+        'name':       ParagraphStyle('N',   fontName='Helvetica-Bold',    fontSize=18,  textColor=_BLACK, alignment=TA_CENTER, spaceAfter=3, leading=22),
+        'contact':    ParagraphStyle('C',   fontName='Helvetica',         fontSize=8.5, textColor=_GRAY,  alignment=TA_CENTER, spaceAfter=2, leading=12),
+        'section':    ParagraphStyle('S',   fontName='Helvetica-Bold',    fontSize=10,  textColor=_BLACK, spaceBefore=6, spaceAfter=2, leading=13),
+        'etitle':     ParagraphStyle('ET',  fontName='Helvetica-Bold',    fontSize=fs,  textColor=_BLACK, spaceAfter=1, leading=fs+3),
+        'etitle_it':  ParagraphStyle('ETI', fontName='Helvetica-BoldOblique', fontSize=fs, textColor=_BLACK, spaceAfter=1, leading=fs+3),
+        'esub':       ParagraphStyle('ES',  fontName='Helvetica-Oblique', fontSize=sm,  textColor=_GRAY,  spaceAfter=1, leading=sm+3),
+        'body':       ParagraphStyle('B',   fontName='Helvetica',         fontSize=fs,  textColor=_DARK,  leading=fs+4, spaceAfter=1),
+        'body_bold':  ParagraphStyle('BB',  fontName='Helvetica-Bold',    fontSize=fs,  textColor=_DARK,  leading=fs+4, spaceAfter=1),
+        'bullet':     ParagraphStyle('BL',  fontName='Helvetica',         fontSize=sm,  textColor=_DARK,  leading=sm+3, leftIndent=12, spaceAfter=0),
     }
 
 
@@ -304,9 +306,12 @@ def _build_story(data: dict, st: dict) -> list:
     to = _san(sk.get('tools',''))
     if pl or ts or to:
         story += _sec('Skills', st)
-        if pl: story.append(Paragraph(f"<b>Languages:</b> {pl}", st['body']))
-        if ts: story.append(Paragraph(f"<b>Technical:</b> {ts}", st['body']))
-        if to: story.append(Paragraph(f"<b>Tools:</b> {to}", st['body']))
+        if pl:
+            story.append(Paragraph('Languages: ' + pl, st['body_bold']))
+        if ts:
+            story.append(Paragraph('Technical: ' + ts, st['body_bold']))
+        if to:
+            story.append(Paragraph('Tools: ' + to, st['body_bold']))
         story.append(Spacer(1, 2))
 
     # ── Experience ────────────────────────────────────────────────────────────
@@ -336,7 +341,7 @@ def _build_story(data: dict, st: dict) -> list:
             pt = _san(proj.get('technologies',''))
             pd = _san(proj.get('description',''))
             pl2 = _san(proj.get('link',''))
-            ttxt = pn + (f" | <i>{pt}</i>" if pt else '')
+            ttxt = pn + (' | ' + pt if pt else '')
             story.append(Paragraph(ttxt, st['etitle']))
             if pd:
                 for line in re.split(r'[.\n]', pd):
