@@ -15,6 +15,7 @@ import re
 import json
 import requests
 import PyPDF2
+from xml.sax.saxutils import escape as _xml_escape
 
 from reportlab.lib.pagesizes import letter
 from reportlab.lib.styles import ParagraphStyle
@@ -72,9 +73,13 @@ def clean_text(text: str) -> str:
 
 
 def _san(text) -> str:
+    """Clean text and escape ALL XML special characters for ReportLab paragraphs."""
     t = clean_text(text) if text else ""
-    # Escape # so ReportLab doesn't treat it as a hex colour token
-    return t.replace('#', '&#35;')
+    # Remove # completely (causes "non-hexadecimal digit" in ReportLab XML parser)
+    t = t.replace('#', '')
+    # Escape &, <, > for XML safety (ReportLab parses paragraph text as XML)
+    t = _xml_escape(t)
+    return t
 
 
 # ─────────────────────────────────────────────────────────────────────────────

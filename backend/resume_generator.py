@@ -6,6 +6,7 @@ The template logic is completely hidden from the frontend.
 
 import io
 import re
+from xml.sax.saxutils import escape as _xml_escape
 from reportlab.lib.pagesizes import letter
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.lib.units import inch
@@ -25,11 +26,15 @@ DIVIDER  = colors.HexColor('#cccccc')
 
 
 def sanitize(text: str) -> str:
+    """Sanitize text for ReportLab — escape XML special chars, remove # for hex safety."""
     if not text:
         return ""
     t = str(text).strip()
-    # Escape # so ReportLab doesn't treat it as a hex colour token
-    return t.replace('#', '&#35;')
+    # Remove # (causes non-hexadecimal digit error in ReportLab XML parser)
+    t = t.replace('#', '')
+    # Escape &, <, > for XML safety
+    t = _xml_escape(t)
+    return t
 
 
 # ─── Style factory ────────────────────────────────────────────────────────────
