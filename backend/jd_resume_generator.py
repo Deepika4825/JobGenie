@@ -249,7 +249,8 @@ def _divider():
 
 
 def _sec(title, st):
-    return [Paragraph(title.upper(), st['section']), _divider()]
+    safe_title = title.upper().encode('ascii', errors='ignore').decode('ascii')
+    return [_p(safe_title, st['section']), _divider()]
 
 
 def _p(text, style):
@@ -393,7 +394,7 @@ def _build_story(data: dict, st: dict) -> list:
     cw = _san(data.get('coursework',''))
     if cw:
         story += _sec('Relevant Coursework', st)
-        story.append(Paragraph(cw, st['body']))
+        story.append(_p(cw, st['body']))
 
     return story
 
