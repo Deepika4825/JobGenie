@@ -312,7 +312,10 @@ def generate_resume_route():
         resp.headers['Access-Control-Expose-Headers'] = 'X-Resume-Filename'
         return resp
     except Exception:
-        print(traceback.format_exc())
+        tb = traceback.format_exc()
+        print(tb)
+        if "hexadecimal" in tb.lower():
+            return jsonify({"error": "Failed to generate resume due to special characters in your input. Please remove special symbols and try again."}), 500
         return jsonify({"error": "Failed to generate resume"}), 500
 
 
@@ -401,7 +404,11 @@ def generate_jd_resume_upload_route():
     except ValueError as e:
         return jsonify({"error": str(e)}), 400
     except Exception:
-        print(traceback.format_exc())
+        tb = traceback.format_exc()
+        print(tb)
+        # If ReportLab hex error, give a user-friendly message
+        if "hexadecimal" in tb.lower() or "Non-hexadecimal" in tb:
+            return jsonify({"error": "Failed to generate resume due to special characters in your resume. Please try again."}), 500
         return jsonify({"error": "Failed to generate resume. Please try again."}), 500
 
 
