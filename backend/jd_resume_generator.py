@@ -148,8 +148,22 @@ def extract_and_tailor(resume_text: str, jd_text: str, groq_key: str) -> dict:
             print(f"[JD] Groq error {resp.status_code}: {resp.text[:200]}")
             return _empty_data()
 
-        raw = resp.json()["choices"][0]["message"]["content"].strip()
-        print(f"[JD] raw[:500]: {raw[:500]}")
+        resp_json = resp.json()
+        choice    = resp_json["choices"][0]
+        raw       = choice["message"]["content"].strip()
+        finish    = choice.get("finish_reason", "")
+
+        # If response was cut off, retry with higher token limit once
+        if finish == "length":
+            print("[JD] Response truncated (finish_reason=length), retrying at 3500 tokens")
+            payload["max_tokens"] = 3500
+            resp2 = requests.post(GROQ_URL, json=payload, headers=headers, timeout=50)
+            if resp2.status_code == 200:
+                raw = resp2.json()["choices"][0]["message"]["content"].strip()
+            else:
+                print(f"[JD] Retry failed {resp2.status_code}")
+
+        print(f"[JD] finish_reason={finish}, response_len={len(raw)}")
 
         # Strip thinking blocks and markdown fences
         raw = re.sub(r"<think>.*?</think>", "", raw, flags=re.DOTALL).strip()
