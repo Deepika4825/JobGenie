@@ -1,0 +1,85 @@
+{
+  "timestamp": "20261127_final",
+  "pairs_evaluated": 10,
+  "pairs_errored": 0,
+  "aggregate": {
+    "avg_keyword_match_gain": -0.013,
+    "avg_flag_rate": 0.13,
+    "avg_processing_time_s": 7.41,
+    "total_bullets": 118,
+    "total_flagged_bullets": 13
+  },
+  "note": "flag_rate = automated token-overlap flags only. Confirmed fabrication requires human annotation.",
+  "results": [
+    {
+      "test_id": "T001", "resume_file": "resume_01.pdf",
+      "jd_length_chars": 373, "jd_keyword_count": 38,
+      "keyword_match_before": 0.158, "keyword_match_after": 0.158, "keyword_match_gain": 0.0,
+      "total_bullets": 11, "verified_bullets": 11, "flagged_bullets": 0, "flag_rate": 0.0,
+      "processing_time_s": 13.43, "error": null
+    },
+    {
+      "test_id": "T002", "resume_file": "resume_01.pdf",
+      "jd_length_chars": 3254, "jd_keyword_count": 60,
+      "keyword_match_before": 0.4, "keyword_match_after": 0.383, "keyword_match_gain": -0.017,
+      "total_bullets": 11, "verified_bullets": 11, "flagged_bullets": 0, "flag_rate": 0.0,
+      "processing_time_s": 6.63, "error": null
+    },
+    {
+      "test_id": "T003", "resume_file": "resume_02.pdf",
+      "jd_length_chars": 373, "jd_keyword_count": 38,
+      "keyword_match_before": 0.079, "keyword_match_after": 0.079, "keyword_match_gain": 0.0,
+      "total_bullets": 15, "verified_bullets": 15, "flagged_bullets": 0, "flag_rate": 0.0,
+      "processing_time_s": 4.88, "error": null
+    },
+    {
+      "test_id": "T004", "resume_file": "resume_02.pdf",
+      "jd_length_chars": 3254, "jd_keyword_count": 60,
+      "keyword_match_before": 0.4, "keyword_match_after": 0.267, "keyword_match_gain": -0.133,
+      "total_bullets": 8, "verified_bullets": 8, "flagged_bullets": 0, "flag_rate": 0.0,
+      "processing_time_s": 6.43, "error": null
+    },
+    {
+      "test_id": "T005", "resume_file": "resume_03.pdf",
+      "jd_length_chars": 373, "jd_keyword_count": 38,
+      "keyword_match_before": 0.158, "keyword_match_after": 0.158, "keyword_match_gain": 0.0,
+      "total_bullets": 13, "verified_bullets": 13, "flagged_bullets": 0, "flag_rate": 0.0,
+      "processing_time_s": 6.03, "error": null
+    },
+    {
+      "test_id": "T006", "resume_file": "resume_03.pdf",
+      "jd_length_chars": 3254, "jd_keyword_count": 60,
+      "keyword_match_before": 0.433, "keyword_match_after": 0.417, "keyword_match_gain": -0.017,
+      "total_bullets": 13, "verified_bullets": 13, "flagged_bullets": 0, "flag_rate": 0.0,
+      "processing_time_s": 4.98, "error": null
+    },
+    {
+      "test_id": "T007", "resume_file": "resume_04.pdf",
+      "jd_length_chars": 373, "jd_keyword_count": 38,
+      "keyword_match_before": 0.132, "keyword_match_after": 0.158, "keyword_match_gain": 0.026,
+      "total_bullets": 17, "verified_bullets": 8, "flagged_bullets": 9, "flag_rate": 0.529,
+      "processing_time_s": 21.28, "error": null
+    },
+    {
+      "test_id": "T008", "resume_file": "resume_04.pdf",
+      "jd_length_chars": 3254, "jd_keyword_count": 60,
+      "keyword_match_before": 0.233, "keyword_match_after": 0.283, "keyword_match_gain": 0.05,
+      "total_bullets": 6, "verified_bullets": 2, "flagged_bullets": 4, "flag_rate": 0.667,
+      "processing_time_s": 6.42, "error": null
+    },
+    {
+      "test_id": "T009", "resume_file": "resume_05.pdf",
+      "jd_length_chars": 373, "jd_keyword_count": 38,
+      "keyword_match_before": 0.132, "keyword_match_after": 0.132, "keyword_match_gain": 0.0,
+      "total_bullets": 12, "verified_bullets": 12, "flagged_bullets": 0, "flag_rate": 0.0,
+      "processing_time_s": 5.19, "error": null
+    },
+    {
+      "test_id": "T010", "resume_file": "resume_05.pdf",
+      "jd_length_chars": 3254, "jd_keyword_count": 60,
+      "keyword_match_before": 0.433, "keyword_match_after": 0.383, "keyword_match_gain": -0.05,
+      "total_bullets": 12, "verified_bullets": 12, "flagged_bullets": 0, "flag_rate": 0.0,
+      "processing_time_s": 5.85, "error": null
+    }
+  ]
+}

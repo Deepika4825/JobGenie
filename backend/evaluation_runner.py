@@ -285,14 +285,15 @@ def run_evaluation():
                 print(f"    [rate-limit delay: {INTER_PAIR_DELAY}s]", end="\r", flush=True)
                 time.sleep(INTER_PAIR_DELAY)
 
+    # Aggregate metrics
+    valid   = [r for r in all_results if not r.get("error")]
+    errored = [r for r in all_results if r.get("error")]
+
     if errored:
         print(f"\n  Errored pairs ({len(errored)}):")
         for r in errored:
             print(f"    [{r['test_id']}] {r['resume_file']}: {r['error']}")
 
-    # Aggregate metrics
-    valid   = [r for r in all_results if not r.get("error")]
-    errored = [r for r in all_results if r.get("error")]
     if valid:
         avg_gain      = sum(r["keyword_match_gain"] for r in valid) / len(valid)
         avg_flag_rate = sum(r["flag_rate"] for r in valid) / len(valid)
