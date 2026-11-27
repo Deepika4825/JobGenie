@@ -399,34 +399,61 @@ def _build_story(data: dict, st: dict) -> list:
     return story
 
 
+def _deep_sanitize(obj):
+    """Recursively sanitize all string values to alphanumeric + basic punctuation only."""
+    if isinstance(obj, dict):
+        return {k: _deep_sanitize(v) for k, v in obj.items()}
+    elif isinstance(obj, list):
+        return [_deep_sanitize(i) for i in obj]
+    elif isinstance(obj, str):
+        safe = obj.encode('ascii', errors='ignore').decode('ascii')
+        safe = ''.join(c if c.isalnum() or c in ' .,;:()-|/@+' else ' ' for c in safe)
+        return ' '.join(safe.split())
+    return obj
+
+
 def build_pdf(data: dict) -> bytes:
     """
-    Build one-page PDF.
-    First try at font size 9.5. If content overflows one page,
-    rebuild with progressively smaller fonts until it fits.
+    Build one-page PDF. Tries font sizes 9.5→8.0.
+    Falls back to deep-sanitized data if any attempt raises an exception.
     """
     lm = rm = 0.6 * inch
     tm = bm = 0.5 * inch
-    page_h = letter[1] - tm - bm
 
     for fs in [9.5, 9.0, 8.5, 8.0]:
+        try:
+            buf = io.BytesIO()
+            doc = SimpleDocTemplate(buf, pagesize=letter,
+                                    leftMargin=lm, rightMargin=rm,
+                                    topMargin=tm, bottomMargin=bm)
+            st    = _styles(fs)
+            story = _build_story(data, st)
+            doc.build(story)
+            buf.seek(0)
+            reader = PyPDF2.PdfReader(buf)
+            if len(reader.pages) <= 1:
+                buf.seek(0)
+                return buf.read()
+        except Exception as e:
+            print(f"[PDF] build_pdf attempt fs={fs} failed: {e}")
+
+    # Last resort: deep-sanitize all strings and retry
+    print("[PDF] Retrying with deep-sanitized data")
+    try:
+        import copy
+        safe_data = _deep_sanitize(copy.deepcopy(data))
         buf = io.BytesIO()
         doc = SimpleDocTemplate(buf, pagesize=letter,
                                 leftMargin=lm, rightMargin=rm,
-                                topMargin=tm,  bottomMargin=bm)
-        st    = _styles(fs)
-        story = _build_story(data, st)
+                                topMargin=tm, bottomMargin=bm)
+        st    = _styles(8.5)
+        story = _build_story(safe_data, st)
         doc.build(story)
-        # Check page count
         buf.seek(0)
-        reader = PyPDF2.PdfReader(buf)
-        if len(reader.pages) <= 1:
-            buf.seek(0)
-            return buf.read()
-
-    # Final fallback — just return whatever was built last
-    buf.seek(0)
-    return buf.read()
+        return buf.read()
+    except Exception as e:
+        print(f"[PDF] deep-sanitize retry failed: {e}")
+        raise
 
 
 # ─────────────────────────────────────────────────────────────────────────────
