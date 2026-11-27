@@ -27,7 +27,9 @@ DIVIDER  = colors.HexColor('#cccccc')
 def sanitize(text: str) -> str:
     if not text:
         return ""
-    return str(text).strip()
+    t = str(text).strip()
+    # Escape # so ReportLab doesn't treat it as a hex colour token
+    return t.replace('#', '&#35;')
 
 
 # ─── Style factory ────────────────────────────────────────────────────────────

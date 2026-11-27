@@ -72,7 +72,9 @@ def clean_text(text: str) -> str:
 
 
 def _san(text) -> str:
-    return clean_text(text) if text else ""
+    t = clean_text(text) if text else ""
+    # Escape # so ReportLab doesn't treat it as a hex colour token
+    return t.replace('#', '&#35;')
 
 
 # ─────────────────────────────────────────────────────────────────────────────
