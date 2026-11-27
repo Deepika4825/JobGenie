@@ -345,12 +345,15 @@ def generate_jd_resume_upload_route():
             jd_file = request.files["jd_pdf"]
             if not jd_file.filename.lower().endswith(".pdf"):
                 return jsonify({"error": "Job description must be a PDF file"}), 400
-            jd_text = extract_pdf(jd_file)
+            try:
+                jd_text = extract_pdf(jd_file)
+            except Exception as e:
+                return jsonify({"error": f"Could not read the job description PDF: {str(e)}. Try pasting the JD text instead."}), 400
         else:
             jd_text = (request.form.get("jd_text") or "").strip()
 
-        if not jd_text:
-            return jsonify({"error": "Job description is required (upload a PDF or paste the text)"}), 400
+        if not jd_text or len(jd_text.strip()) < 20:
+            return jsonify({"error": "Job description is required and must contain text. If you uploaded a PDF, it may be corrupted or image-based — try pasting the JD text instead."}), 400
 
         # Optional manual link overrides from the form
         manual_links = {
