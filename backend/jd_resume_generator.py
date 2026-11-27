@@ -262,15 +262,8 @@ def _build_story(data: dict, st: dict) -> list:
     # Links — always show if present (from AI extraction OR manual override)
     links = [_san(p.get(k,'')) for k in ['linkedin','github','leetcode','codechef','medium'] if p.get(k,'').strip()]
     if links:
-        # Render each link as a clickable hyperlink
-        link_parts = []
-        for url in links:
-            if url:
-                # Ensure URL has protocol
-                href = url if url.startswith('http') else f'https://{url}'
-                link_parts.append(f'<a href="{href}" color="#0000EE"><u>{url}</u></a>')
-        if link_parts:
-            story.append(Paragraph('  |  '.join(link_parts), st['contact']))
+        # Render as plain text (clickable hyperlinks cause hex color errors in some ReportLab versions)
+        story.append(Paragraph('  |  '.join(links), st['contact']))
 
     story.append(Spacer(1, 6))
 
