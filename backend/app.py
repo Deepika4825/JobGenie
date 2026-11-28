@@ -147,7 +147,7 @@ def ask_groq(text):
     payload = {"model": "openai/gpt-oss-120b", "messages": [{"role": "user", "content": prompt}], "temperature": 0.1, "max_tokens": 600}
     resp = requests.post(GROQ_URL, json=payload, headers=headers, timeout=30)
     if resp.status_code != 200:
-        raise Exception(f"Groq {resp.status_code}: {resp.text[:200]}")
+        raise Exception(f"Groq error {resp.status_code}")
     raw = resp.json()["choices"][0]["message"]["content"].strip()
     print(f"[Analysis] LLM response length={len(raw)} chars")
     # Strip <think>...</think> reasoning blocks
@@ -375,7 +375,7 @@ def generate_jd_resume_upload_route():
             return jsonify({"error": "Resume generation failed: could not extract sufficient content from your resume. Please ensure your PDF is text-based and try again."}), 500
 
         filename = f"{name_slug}_resume.pdf"
-        print(f"[JD Route] PDF generated: {len(pdf_bytes)} bytes, filename: {filename}")
+        print(f"[JD Route] PDF generated: {len(pdf_bytes)} bytes")
 
         # Reviewer improvement: run fabrication validation and expose summary header
         try:
