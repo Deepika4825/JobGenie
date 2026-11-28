@@ -145,7 +145,7 @@ def extract_and_tailor(resume_text: str, jd_text: str, groq_key: str) -> dict:
     try:
         resp = requests.post(GROQ_URL, json=payload, headers=headers, timeout=50)
         if resp.status_code != 200:
-            print(f"[JD] Groq error {resp.status_code}: {resp.text[:200]}")
+            print(f"[JD] Groq error {resp.status_code}")
             return _empty_data()
 
         resp_json = resp.json()
@@ -177,15 +177,15 @@ def extract_and_tailor(resume_text: str, jd_text: str, groq_key: str) -> dict:
             raw = raw[s:e+1]
 
         data = json.loads(raw)
-        print(f"[JD] keys: {list(data.keys())}")
+        print(f"[JD] parsed keys={list(data.keys())}, resume_len={len(resume_text)}, jd_len={len(jd_text)}")
         return data
 
     except json.JSONDecodeError as ex:
-        print(f"[JD] JSON error: {ex} — raw: {raw[:300]}")
+        print(f"[JD] JSON parse error at position {ex.pos}, raw_len={len(raw)}")
         # Try per-field regex extraction as fallback
         return _regex_extract(raw)
     except Exception as ex:
-        print(f"[JD] exception: {ex}")
+        print(f"[JD] exception type={type(ex).__name__}")
         return _empty_data()
 
 

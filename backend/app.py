@@ -149,7 +149,7 @@ def ask_groq(text):
     if resp.status_code != 200:
         raise Exception(f"Groq {resp.status_code}: {resp.text[:200]}")
     raw = resp.json()["choices"][0]["message"]["content"].strip()
-    print(f"Groq raw response: {raw[:300]}")
+    print(f"[Analysis] LLM response length={len(raw)} chars")
     # Strip <think>...</think> reasoning blocks
     raw = re.sub(r"<think>.*?</think>", "", raw, flags=re.DOTALL).strip()
     raw = re.sub(r"^```(?:json)?\s*", "", raw).strip()
